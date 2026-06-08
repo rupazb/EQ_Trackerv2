@@ -682,7 +682,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════
-   STATUS BOARD
+   status board
 ═══════════════════════════════════════════════════════ */
 .kanban-board {
   display: grid;
@@ -998,8 +998,8 @@ table.data-table tbody tr:hover {
   border: none;
   background: var(--color-primary);
   color: white;
+  font-size: 13px;
   font-weight: 600;
-  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Inter', sans-serif;
@@ -1007,480 +1007,255 @@ table.data-table tbody tr:hover {
 
 .btn-primary:hover {
   background: #1d4ed8;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
 }
 
+.btn-secondary {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-secondary:hover {
+  border-color: var(--border-focus);
+  background: var(--bg-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════ */
+.content::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar,
+.kanban-items::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track,
+.sidebar-nav::-webkit-scrollbar-track,
+.kanban-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb,
+.sidebar-nav::-webkit-scrollbar-thumb,
+.kanban-items::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb:hover,
+.sidebar-nav::-webkit-scrollbar-thumb:hover,
+.kanban-items::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+
+  .project-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .kanban-board {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .content-inner {
+    padding: 20px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .project-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+}
   </style>
 </head>
-<body>
+<body class="light">
   <div class="app">
     <!-- SIDEBAR -->
-    <div class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo">
-          <div class="sidebar-logo-icon">EQ</div>
-          <h1>Tracker</h1>
+          <div class="sidebar-logo-icon">⚡</div>
+          <h1>EQ Tracker</h1>
         </div>
         <div class="sidebar-subtitle">
           <span class="live-indicator"></span>
-          <span>Live • Status</span>
+          <span>Live Dashboard</span>
         </div>
       </div>
 
       <nav class="sidebar-nav">
-        <!-- Dashboard -->
         <div class="nav-section-title">Navigation</div>
-        <div class="nav-item active" onclick="showView('dashboard')">
-          <span class="nav-icon">📊</span>
-          <span>Dashboard</span>
+        <div class="nav-item active" onclick="APP.showView('overview', this)">
+          <span class="nav-icon">📊</span> Dashboard
         </div>
-        <div class="nav-item" onclick="showView('projects')">
-          <span class="nav-icon">📁</span>
-          <span>Projects</span>
+        <div class="nav-item" onclick="APP.showView('kanban', this)">
+          <span class="nav-icon">🗂</span> status board
         </div>
-        <div class="nav-item" onclick="showView('status')">
-          <span class="nav-icon">📈</span>
-          <span>Status</span>
+        <div class="nav-item" onclick="APP.showView('data', this)">
+          <span class="nav-icon">📋</span> Data Table
         </div>
-        <div class="nav-item" onclick="showView('weekly')">
-          <span class="nav-icon">📅</span>
-          <span>Weekly</span>
-        </div>
+
+        <div class="nav-section-title" style="margin-top:16px">Filters</div>
+        <div id="weekNav"></div>
       </nav>
 
       <div class="sidebar-footer">
-        <button class="sidebar-btn" onclick="toggleDarkMode()">🌓 Theme</button>
-        <button class="sidebar-btn" onclick="alert('Settings')">⚙️ Settings</button>
+        <button class="sidebar-btn" onclick="APP.toggleTheme()" id="themeBtn">🌙 Dark</button>
+        <button class="sidebar-btn" onclick="APP.manualRefresh()">↺ Refresh</button>
       </div>
-    </div>
+    </aside>
 
     <!-- MAIN CONTENT -->
     <div class="main">
       <!-- TOPBAR -->
       <div class="topbar">
         <div class="topbar-left">
-          <div class="page-title">Project Overview</div>
-          <div class="page-breadcrumb">Dashboard › Summary</div>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="page-breadcrumb">GC + EQ Initiatives</div>
         </div>
         <div class="topbar-right">
-          <div class="sync-status">
-            <span class="sync-spinner"></span>
-            <span>Live Sync</span>
-          </div>
-          <button class="btn-icon" onclick="alert('Notifications')">🔔</button>
-          <button class="btn-icon" onclick="alert('Help')">❓</button>
+          <div class="sync-status" id="syncStatus">✅ Live</div>
+          <div class="sync-time" id="syncTime"></div>
+          <button class="btn-icon" onclick="APP.manualRefresh()" title="Refresh">↺</button>
+          <button class="btn-icon" onclick="APP.toggleTheme()" title="Toggle dark mode">🌙</button>
         </div>
       </div>
 
       <!-- CONTENT -->
       <div class="content">
         <div class="content-inner">
-          
-          <!-- DASHBOARD VIEW -->
-          <div id="dashboard" class="view active">
+          <!-- OVERVIEW VIEW -->
+          <div class="view active" id="view-overview">
+            <!-- Summary -->
             <div class="summary-section">
               <div class="summary-text">
                 <span class="summary-text-icon">📊</span>
-                <span>Real-time project metrics and performance indicators</span>
-              </div>
-
-              <!-- KPI GRID -->
-              <div class="kpi-grid">
-                <div class="kpi-card success">
-                  <div class="kpi-label">Active Projects</div>
-                  <div class="kpi-value">12</div>
-                  <div class="kpi-meta">↑ 2 from last week</div>
-                </div>
-                <div class="kpi-card warning">
-                  <div class="kpi-label">In Progress</div>
-                  <div class="kpi-value">28</div>
-                  <div class="kpi-meta">⚠️ 3 behind schedule</div>
-                </div>
-                <div class="kpi-card">
-                  <div class="kpi-label">Completed</div>
-                  <div class="kpi-value">156</div>
-                  <div class="kpi-meta">✓ 98% quality score</div>
-                </div>
-                <div class="kpi-card error">
-                  <div class="kpi-label">Blocked</div>
-                  <div class="kpi-value">5</div>
-                  <div class="kpi-meta">⛔ Requiring attention</div>
-                </div>
+                <span>Project execution dashboard — real-time sync from Google Sheets</span>
               </div>
             </div>
 
-            <!-- FILTER BAR -->
+            <!-- KPI Cards -->
+            <div class="kpi-grid" id="kpiGrid"></div>
+
+            <!-- Filters -->
             <div class="filter-bar">
-              <span class="filter-label">Filter:</span>
-              <div class="filter-pill active">All Projects</div>
-              <div class="filter-pill">In Progress</div>
-              <div class="filter-pill active success">Active</div>
-              <div class="filter-pill">Completed</div>
+              <span class="filter-label">Filter by status:</span>
+              <button class="filter-pill active" onclick="APP.setFilter('All', this)">All</button>
+              <button class="filter-pill success" onclick="APP.setFilter('In Progress', this)">In Progress</button>
+              <button class="filter-pill error" onclick="APP.setFilter('Blocked', this)">Blocked</button>
+              <button class="filter-pill warning" onclick="APP.setFilter('Not Started', this)">Not Started</button>
+              <button class="filter-pill" onclick="APP.setFilter('Complete', this)">Complete</button>
             </div>
 
-            <!-- PROJECT GRID -->
-            <div class="section-header">
-              <h2 class="section-title">Featured Projects</h2>
-              <span class="section-meta">8 projects</span>
+            <!-- Projects Grid -->
+            <div>
+              <div class="section-header">
+                <h2 class="section-title">Active Projects</h2>
+                <span class="section-meta" id="projectCount"></span>
+              </div>
+              <div class="project-grid" id="projectGrid"></div>
             </div>
-            <div class="project-grid">
-              <div class="project-card">
-                <div class="project-card-header">
-                  <h3 class="project-card-title">API Integration Layer</h3>
-                  <p class="project-card-meta">Backend • High Priority</p>
-                </div>
-                <div class="project-card-body">
-                  <div class="project-card-row">
-                    <span class="project-card-label">Status</span>
-                    <span class="status-badge active">Active</span>
-                  </div>
-                  <div class="project-card-row">
-                    <span class="project-card-label">Progress</span>
-                    <span class="project-card-value">72%</span>
-                  </div>
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: 72%"></div>
-                  </div>
-                </div>
-              </div>
 
-              <div class="project-card">
-                <div class="project-card-header">
-                  <h3 class="project-card-title">Mobile App Redesign</h3>
-                  <p class="project-card-meta">Frontend • Medium Priority</p>
-                </div>
-                <div class="project-card-body">
-                  <div class="project-card-row">
-                    <span class="project-card-label">Status</span>
-                    <span class="status-badge active">Active</span>
-                  </div>
-                  <div class="project-card-row">
-                    <span class="project-card-label">Progress</span>
-                    <span class="project-card-value">55%</span>
-                  </div>
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: 55%"></div>
-                  </div>
-                </div>
+            <!-- Weekly Breakdown -->
+            <div class="weekly-section">
+              <div class="section-header">
+                <h2 class="section-title">By Week</h2>
               </div>
-
-              <div class="project-card">
-                <div class="project-card-header">
-                  <h3 class="project-card-title">Database Optimization</h3>
-                  <p class="project-card-meta">Infrastructure • High Priority</p>
-                </div>
-                <div class="project-card-body">
-                  <div class="project-card-row">
-                    <span class="project-card-label">Status</span>
-                    <span class="status-badge pending">Pending</span>
-                  </div>
-                  <div class="project-card-row">
-                    <span class="project-card-label">Progress</span>
-                    <span class="project-card-value">0%</span>
-                  </div>
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: 0%"></div>
-                  </div>
-                </div>
-              </div>
+              <div id="weeklyBreakdown"></div>
             </div>
           </div>
 
-          <!-- PROJECTS VIEW -->
-          <div id="projects" class="view">
-            <div class="section-header">
-              <h2 class="section-title">All Projects</h2>
-              <span class="section-meta">12 projects</span>
+          <!-- KANBAN VIEW -->
+          <div class="view" id="view-kanban">
+            <div class="filter-bar">
+              <span class="filter-label">status board —</span>
+              <span id="kanbanMonth" style="font-weight: 600; color: var(--text-primary);">All Projects</span>
+              <button class="filter-pill" style="margin-left: auto;" onclick="APP._weekFilter = null; APP._applyFilters(); RENDER.renderKanban(APP._filteredRows)">Clear filter</button>
             </div>
+            <div class="kanban-board" id="kanbanBoard"></div>
+          </div>
 
+          <!-- DATA TABLE VIEW -->
+          <div class="view" id="view-data">
             <div class="search-wrap">
               <span class="search-icon">🔍</span>
-              <input class="search-input" type="text" placeholder="Search projects..."/>
-              <span class="search-clear" onclick="this.previousElementSibling.value=''">✕</span>
+              <input class="search-input" type="text" id="searchInput" placeholder="Search projects, teams, initiatives…" oninput="APP.onSearch(this.value)"/>
+              <span class="search-clear" onclick="document.getElementById('searchInput').value = ''; APP.onSearch('')">✕</span>
+            </div>
+
+            <div class="filter-bar">
+              <span class="filter-label">Filter:</span>
+              <button class="filter-pill active" onclick="APP.setFilter('All', this)">All</button>
+              <button class="filter-pill success" onclick="APP.setFilter('In Progress', this)">In Progress</button>
+              <button class="filter-pill error" onclick="APP.setFilter('Blocked', this)">Blocked</button>
+              <button class="filter-pill warning" onclick="APP.setFilter('Not Started', this)">Not Started</button>
+              <button class="filter-pill" onclick="APP.setFilter('Complete', this)">Complete</button>
+            </div>
+
+            <div class="section-header">
+              <h2 class="section-title">All Projects</h2>
+              <span class="section-meta">Live from Google Sheets</span>
             </div>
 
             <div class="table-wrap">
               <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Project Name</th>
-                    <th>Category</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Progress</th>
-                    <th>Owner</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>API Integration Layer</strong></td>
-                    <td>Backend</td>
-                    <td>🔴 High</td>
-                    <td><span class="status-badge active">Active</span></td>
-                    <td>72%</td>
-                    <td>Alex Chen</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Mobile App Redesign</strong></td>
-                    <td>Frontend</td>
-                    <td>🟡 Medium</td>
-                    <td><span class="status-badge active">Active</span></td>
-                    <td>55%</td>
-                    <td>Sarah Kim</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Database Optimization</strong></td>
-                    <td>Infrastructure</td>
-                    <td>🔴 High</td>
-                    <td><span class="status-badge pending">Pending</span></td>
-                    <td>0%</td>
-                    <td>Mike Johnson</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Security Audit</strong></td>
-                    <td>DevOps</td>
-                    <td>🔴 High</td>
-                    <td><span class="status-badge blocked">Blocked</span></td>
-                    <td>35%</td>
-                    <td>Emma Davis</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Documentation Portal</strong></td>
-                    <td>Content</td>
-                    <td>🟡 Medium</td>
-                    <td><span class="status-badge complete">Complete</span></td>
-                    <td>100%</td>
-                    <td>David Wilson</td>
-                  </tr>
-                </tbody>
+                <thead><tr id="headerRow"></tr></thead>
+                <tbody id="tableBody"></tbody>
               </table>
             </div>
           </div>
-
-          <!-- STATUS VIEW (KANBAN/STATUS BOARD) -->
-          <div id="status" class="view">
-            <div class="section-header">
-              <h2 class="section-title">Status Board</h2>
-              <span class="section-meta">Workflow pipeline</span>
-            </div>
-
-            <div class="kanban-board">
-              <div class="kanban-column">
-                <div class="kanban-header">
-                  <div class="kanban-title">
-                    <span>📋</span>
-                    <span>Planned</span>
-                  </div>
-                  <div class="kanban-count">3</div>
-                </div>
-                <div class="kanban-items">
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">User Analytics Dashboard</div>
-                    <div class="kanban-card-meta">Backend • 2 days</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Payment Gateway Integration</div>
-                    <div class="kanban-card-meta">Payments • 3 days</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Email Notifications</div>
-                    <div class="kanban-card-meta">Backend • 1 day</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="kanban-column">
-                <div class="kanban-header">
-                  <div class="kanban-title">
-                    <span>🚀</span>
-                    <span>In Progress</span>
-                  </div>
-                  <div class="kanban-count">4</div>
-                </div>
-                <div class="kanban-items">
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">API Documentation</div>
-                    <div class="kanban-card-meta">Docs • Alex Chen</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Performance Optimization</div>
-                    <div class="kanban-card-meta">Backend • Sarah Kim</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">UI Component Library</div>
-                    <div class="kanban-card-meta">Frontend • Mike Johnson</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Testing Framework Setup</div>
-                    <div class="kanban-card-meta">QA • Emma Davis</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="kanban-column">
-                <div class="kanban-header">
-                  <div class="kanban-title">
-                    <span>✅</span>
-                    <span>Completed</span>
-                  </div>
-                  <div class="kanban-count">8</div>
-                </div>
-                <div class="kanban-items">
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Authentication Module</div>
-                    <div class="kanban-card-meta">Security • 2/15</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Database Schema Design</div>
-                    <div class="kanban-card-meta">Database • 2/14</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Project Setup</div>
-                    <div class="kanban-card-meta">Setup • 2/10</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Code Review Process</div>
-                    <div class="kanban-card-meta">Process • 2/8</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Sprint Planning</div>
-                    <div class="kanban-card-meta">Planning • 1/15</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Standup Meetings</div>
-                    <div class="kanban-card-meta">Meetings • Daily</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Deployment Strategy</div>
-                    <div class="kanban-card-meta">DevOps • 1/20</div>
-                  </div>
-                  <div class="kanban-card">
-                    <div class="kanban-card-title">Release Notes</div>
-                    <div class="kanban-card-meta">Docs • 2/5</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- WEEKLY VIEW -->
-          <div id="weekly" class="view">
-            <div class="section-header">
-              <h2 class="section-title">Weekly Progress</h2>
-              <span class="section-meta">Week of Feb 10 - Feb 16, 2025</span>
-            </div>
-
-            <div class="weekly-section">
-              <div class="accordion-item">
-                <div class="accordion-header open">
-                  <span class="accordion-icon">▶️</span>
-                  <strong>Week 1: Foundation & Setup (Feb 10 - Feb 16)</strong>
-                </div>
-                <div class="accordion-content">
-                  <div class="project-card">
-                    <div class="project-card-header">
-                      <h3 class="project-card-title">Project Initialization</h3>
-                      <p class="project-card-meta">Foundation</p>
-                    </div>
-                    <div class="project-card-body">
-                      <div class="project-card-row">
-                        <span class="project-card-label">Status</span>
-                        <span class="status-badge complete">Complete</span>
-                      </div>
-                      <div class="project-card-row">
-                        <span class="project-card-label">Deliverables</span>
-                        <span class="project-card-value">5/5 ✓</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="accordion-item">
-                <div class="accordion-header">
-                  <span class="accordion-icon">▶️</span>
-                  <strong>Week 2: Backend Development (Feb 17 - Feb 23)</strong>
-                </div>
-                <div class="accordion-content">
-                  <div class="project-card">
-                    <div class="project-card-header">
-                      <h3 class="project-card-title">API Layer Development</h3>
-                      <p class="project-card-meta">Backend</p>
-                    </div>
-                    <div class="project-card-body">
-                      <div class="project-card-row">
-                        <span class="project-card-label">Status</span>
-                        <span class="status-badge active">Active</span>
-                      </div>
-                      <div class="project-card-row">
-                        <span class="project-card-label">Progress</span>
-                        <span class="project-card-value">65%</span>
-                      </div>
-                      <div class="progress-bar">
-                        <div class="progress-fill" style="width: 65%"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="accordion-item">
-                <div class="accordion-header">
-                  <span class="accordion-icon">▶️</span>
-                  <strong>Week 3: Frontend Development (Feb 24 - Mar 02)</strong>
-                </div>
-                <div class="accordion-content">
-                  <div class="project-card">
-                    <div class="project-card-header">
-                      <h3 class="project-card-title">UI Components</h3>
-                      <p class="project-card-meta">Frontend</p>
-                    </div>
-                    <div class="project-card-body">
-                      <div class="project-card-row">
-                        <span class="project-card-label">Status</span>
-                        <span class="status-badge pending">Pending</span>
-                      </div>
-                      <div class="project-card-row">
-                        <span class="project-card-label">Progress</span>
-                        <span class="project-card-value">0%</span>
-                      </div>
-                      <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0%"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    function showView(viewId) {
-      // Hide all views
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      // Show selected view
-      document.getElementById(viewId).classList.add('active');
-      // Update active nav
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      event.target.closest('.nav-item').classList.add('active');
-    }
-
-    function toggleDarkMode() {
-      document.body.classList.toggle('dark');
-    }
-
-    // Accordion toggle
-    document.querySelectorAll('.accordion-header').forEach(header => {
-      header.addEventListener('click', function() {
-        this.classList.toggle('open');
-      });
-    });
-  </script>
+  <!-- SCRIPTS -->
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script src="render.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
