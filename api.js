@@ -14,10 +14,10 @@ const API = {
     if (CONFIG.USE_APPS_SCRIPT && CONFIG.APPS_SCRIPT_URL) {
       return await this._fetchAppsScript();
     }
-    if (CONFIG.SHEET_CSV_URL && CONFIG.SHEET_CSV_URL !== 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQj6UNpK8LqTGHXwuowg7hMqzwixKmeo9OyGhgj094DmEri17RHIbeq8sBELYqGRQ/pub?output=csv') {
+    if (CONFIG.SHEET_CSV_URL && CONFIG.SHEET_CSV_URL !== 'YOUR_PUBLISHED_CSV_URL_HERE') {
       return await this._fetchCSV(CONFIG.SHEET_CSV_URL);
     }
-    if (CONFIG.SHEET_ID && CONFIG.SHEET_ID !== '1YR1XHNZ2eeUu-oVJyL6uUaQoncRJ3y45') {
+    if (CONFIG.SHEET_ID && CONFIG.SHEET_ID !== 'YOUR_GOOGLE_SHEET_ID_HERE') {
       // Handle case where full URL was pasted into SHEET_ID by mistake
       if (CONFIG.SHEET_ID.startsWith('http')) {
         return await this._fetchCSV(CONFIG.SHEET_ID);
