@@ -24,8 +24,10 @@ const APP = {
     const saved = localStorage.getItem('eq_theme') || CONFIG.DEFAULT_THEME;
     this.applyTheme(saved);
 
-    // Check sheet ID is configured
-    if (CONFIG.SHEET_ID === 'YOUR_GOOGLE_SHEET_ID_HERE') {
+    // Check sheet is configured — accept SHEET_CSV_URL or SHEET_ID
+    const csvOk = CONFIG.SHEET_CSV_URL && CONFIG.SHEET_CSV_URL !== 'YOUR_PUBLISHED_CSV_URL_HERE';
+    const idOk  = CONFIG.SHEET_ID && CONFIG.SHEET_ID !== '' && CONFIG.SHEET_ID !== 'YOUR_GOOGLE_SHEET_ID_HERE';
+    if (!csvOk && !idOk) {
       this._showConfigError();
       return;
     }
