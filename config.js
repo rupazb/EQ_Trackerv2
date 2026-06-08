@@ -8,7 +8,7 @@ const CONFIG = {
   // ── GOOGLE SHEETS ──────────────────────────────────
   // Replace with your Google Sheet ID (from the URL)
   // URL format: https://docs.google.com/spreadsheets/d/SHEET_ID/edit
-  SHEET_ID: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQj6UNpK8LqTGHXwuowg7hMqzwixKmeo9OyGhgj094DmEri17RHIbeq8sBELYqGRQ/pub?output=csv',
+  SHEET_ID: '2PACX-1vQj6UNpK8LqTGHXwuowg7hMqzwixKmeo9OyGhgj094DmEri17RHIbeq8sBELYqGRQ',
 
   // The exact name of the sheet/tab (default: "Project Management")
   SHEET_NAME: 'Project Management',
