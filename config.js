@@ -18,7 +18,7 @@ const CONFIG = {
   // It will look like:
   //   https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv
   //
-  SHEET_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQj6UNpK8LqTGHXwuowg7hMqzwixKmeo9OyGhgj094DmEri17RHIbeq8sBELYqGRQ/pub?output=csv',
+  SHEET_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQj6UNpK8LqTGHXwuowg7hMqzwixKmeo9OyGhgj094DmEri17RHIbeq8sBELYqGRQ/pub?gid=593997182&single=true&output=csv',
 
   // ── LEGACY: only needed if NOT using SHEET_CSV_URL ──
   // If you prefer using the Opensheet proxy, leave SHEET_CSV_URL empty
