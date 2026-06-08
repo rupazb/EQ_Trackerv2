@@ -23,7 +23,7 @@ const CONFIG = {
   // ── LEGACY: only needed if NOT using SHEET_CSV_URL ──
   // If you prefer using the Opensheet proxy, leave SHEET_CSV_URL empty
   // and fill in SHEET_ID + SHEET_NAME instead.
-  SHEET_ID:   '',
+  SHEET_ID:   '1YR1XHNZ2eeUu-oVJyL6uUaQoncRJ3y45',
   SHEET_NAME: 'Project Management',
 
   // Auto-refresh interval in milliseconds (30 seconds)
