@@ -1,16 +1,17 @@
 // ═══════════════════════════════════════════════════════
 //  app.js — App orchestration, state, view switching
+//  Enterprise dashboard redesign
 // ═══════════════════════════════════════════════════════
 
 const APP = {
 
-  // ── STATE ─────────────────────────────────────────
-  _rows:         [],   // raw parsed rows from API
-  _filteredRows: [],   // after status filter + search
+  // ── STATE ──
+  _rows:         [],
+  _filteredRows: [],
   _filterStatus: 'All',
   _searchQuery:  '',
   _sortKey:      null,
-  _sortDir:      1,    // 1=asc, -1=desc
+  _sortDir:      1,
   _weekFilter:   null,
   _activeView:   'overview',
   _refreshTimer: null,
@@ -18,13 +19,11 @@ const APP = {
   _loading:      false,
   _retryCount:   0,
 
-  // ── BOOT ──────────────────────────────────────────
+  // ── INIT ──
   async init() {
-    // Load theme preference
     const saved = localStorage.getItem('eq_theme') || CONFIG.DEFAULT_THEME;
     this.applyTheme(saved);
 
-    // Check sheet is configured — accept SHEET_CSV_URL or SHEET_ID
     const csvOk = CONFIG.SHEET_CSV_URL && CONFIG.SHEET_CSV_URL !== 'YOUR_PUBLISHED_CSV_URL_HERE';
     const idOk  = CONFIG.SHEET_ID && CONFIG.SHEET_ID !== '' && CONFIG.SHEET_ID !== 'YOUR_GOOGLE_SHEET_ID_HERE';
     if (!csvOk && !idOk) {
@@ -38,26 +37,16 @@ const APP = {
   },
 
   _showConfigError() {
-    document.getElementById('summaryText').innerHTML =
-      `⚠️ <strong>Setup required:</strong> Open <code>config.js</code> and set your <code>SHEET_ID</code>. 
-       See the <em>README.md</em> for full instructions.`;
-    document.getElementById('statsRow').innerHTML = '';
-    document.getElementById('wsRow').innerHTML =
-      `<div class="empty-state" style="padding:40px 20px">
-        <div class="es-icon">⚙️</div>
-        <p style="font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:8px">Google Sheet not connected</p>
-        <p style="max-width:380px;margin:0 auto;line-height:1.6;color:var(--muted)">
-          Edit <strong>config.js</strong> and replace <code>YOUR_GOOGLE_SHEET_ID_HERE</code> 
-          with your actual Sheet ID from the URL bar.<br><br>
-          Then make sure your sheet is <strong>published to the web</strong> 
-          (File → Share → Publish to web → Publish).
-        </p>
-      </div>`;
-    document.getElementById('syncBadge').textContent = '⚠️ Not configured';
-    document.getElementById('syncBadge').style.color = '#fca5a5';
+    document.getElementById('summaryCard').innerHTML = `
+      <div style="padding:40px;text-align:center;color:var(--text-tertiary)">
+        <div style="font-size:2rem;margin-bottom:16px">⚙️</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:8px">Setup Required</div>
+        <p style="font-size:0.875rem;line-height:1.6">Open <code>config.js</code> and add your Google Sheet URL</p>
+      </div>
+    `;
   },
 
-  // ── DATA LOAD ─────────────────────────────────────
+  // ── DATA LOADING ──
   async loadData() {
     if (this._loading) return;
     this._loading = true;
@@ -71,54 +60,41 @@ const APP = {
       this._applyFilters();
       this._renderAll();
       this._setSyncState('ok');
-      if (this._retryCount > 0) UTILS.toast('✅ Reconnected to Google Sheets');
+      if (this._retryCount > 0) UTILS.toast('✅ Reconnected', 'success');
     } catch (err) {
-      console.error('[EQ Tracker] Fetch error:', err);
+      console.error('[EQ Tracker]', err);
       this._retryCount++;
-      this._setSyncState('error', err.message);
-      if (this._rows.length === 0) this._showFetchError(err);
-      UTILS.toast(`❌ Sync failed: ${err.message}`, 'error');
+      this._setSyncState('error');
+      UTILS.toast(`❌ ${err.message}`, 'error');
     } finally {
       this._loading = false;
     }
   },
 
-  _showFetchError(err) {
-    document.getElementById('wsRow').innerHTML = `
-      <div class="empty-state" style="padding:40px 20px">
-        <div class="es-icon">🌐</div>
-        <p style="font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:8px">Could not load data</p>
-        <p style="max-width:380px;margin:0 auto;line-height:1.6;color:var(--muted)">${UTILS.esc(err.message)}<br><br>
-          Make sure your Google Sheet is <strong>published to the web</strong> and the Sheet ID is correct.</p>
-        <button class="btn btn-primary" style="margin-top:16px" onclick="APP.manualRefresh()">↺ Try Again</button>
-      </div>`;
-  },
+  _setSyncState(state) {
+    const badge = document.getElementById('syncStatus');
+    const timeEl = document.getElementById('syncTime');
+    const hasSpinner = state === 'syncing';
 
-  _setSyncState(state, msg = '') {
-    const badge    = document.getElementById('syncBadge');
-    const timeEl   = document.getElementById('lastSyncTime');
     if (state === 'syncing') {
-      badge.textContent = '🔄 Syncing…';
-      badge.style.color = '#93c5fd';
+      badge.innerHTML = '<span class="sync-spinner"></span><span>Syncing…</span>';
+      badge.className = 'sync-status';
     } else if (state === 'ok') {
-      badge.textContent = '✅ Live';
-      badge.style.color = '#86efac';
+      badge.innerHTML = '✅ Live';
+      badge.className = 'sync-status';
       timeEl.textContent = `Updated ${UTILS.timeAgo(this._lastSync)}`;
     } else {
-      badge.textContent = `⚠️ Sync error`;
-      badge.style.color = '#fca5a5';
-      timeEl.textContent = msg.slice(0,40);
+      badge.innerHTML = '⚠️ Error';
+      badge.className = 'sync-status error';
     }
   },
 
   _startRefreshLoop() {
     if (this._refreshTimer) clearInterval(this._refreshTimer);
     this._refreshTimer = setInterval(() => this.loadData(), CONFIG.REFRESH_INTERVAL);
-    // Update "x min ago" counter every 30s
     setInterval(() => {
       if (this._lastSync) {
-        document.getElementById('lastSyncTime').textContent =
-          `Updated ${UTILS.timeAgo(this._lastSync)}`;
+        document.getElementById('syncTime').textContent = `Updated ${UTILS.timeAgo(this._lastSync)}`;
       }
     }, 15000);
   },
@@ -128,26 +104,22 @@ const APP = {
     this.loadData();
   },
 
-  // ── FILTER & SORT ─────────────────────────────────
+  // ── FILTERING & SORTING ──
   _applyFilters() {
     let rows = [...this._rows];
 
-    // Status filter
     if (this._filterStatus !== 'All') {
       rows = rows.filter(r => r.status === this._filterStatus);
     }
 
-    // Week filter (for data/kanban view)
     if (this._weekFilter) {
       rows = rows.filter(r => r.weekOf === this._weekFilter);
     }
 
-    // Search
     if (this._searchQuery) {
       rows = rows.filter(r => UTILS.matchesSearch(r, this._searchQuery));
     }
 
-    // Sort
     if (this._sortKey) {
       rows.sort((a, b) => {
         const av = String(a[this._sortKey] || '').toLowerCase();
@@ -165,11 +137,6 @@ const APP = {
     if (el) el.classList.add('active');
     this._applyFilters();
     this.rerender();
-
-    // If on overview, switch to data view for filtered results
-    if (this._activeView === 'overview') {
-      this.showView('data', document.getElementById('nav-kanban'));
-    }
   },
 
   onSearch(query) {
@@ -194,11 +161,11 @@ const APP = {
     document.querySelectorAll('.nav-week-item').forEach(i => i.classList.remove('active'));
     if (this._weekFilter && el) el.classList.add('active');
     this._applyFilters();
-    this.showView('kanban', document.getElementById('nav-kanban'));
+    this.showView('kanban', null);
     RENDER.renderKanban(this._filteredRows, this._weekFilter);
   },
 
-  // ── RENDER ────────────────────────────────────────
+  // ── RENDER ──
   _renderAll() {
     RENDER.renderStats(this._rows);
     RENDER.renderSidebarNav(this._rows);
@@ -207,7 +174,7 @@ const APP = {
 
   rerender() {
     if (this._activeView === 'overview') {
-      RENDER.renderFlowchart(this._rows, this._filterStatus, this._searchQuery);
+      RENDER.renderFlowchart(this._rows, this._filterStatus);
       RENDER.renderWeeklyAccordions(this._filteredRows);
     } else if (this._activeView === 'kanban') {
       RENDER.renderKanban(this._filteredRows, this._weekFilter);
@@ -216,9 +183,8 @@ const APP = {
     }
   },
 
-  // ── VIEW SWITCHING ────────────────────────────────
+  // ── VIEW SWITCHING ──
   showView(viewId, navEl) {
-    // Hide all views
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
@@ -228,9 +194,8 @@ const APP = {
 
     this._activeView = viewId;
 
-    // Update topbar
-    const titles = { overview: 'Overview', kanban: 'Status Board', data: 'Data Table' };
-    document.getElementById('topbarTitle').textContent = titles[viewId] || viewId;
+    const titles = { overview: 'Dashboard', kanban: 'Kanban Board', data: 'Project Data' };
+    document.getElementById('pageTitle').textContent = titles[viewId] || viewId;
 
     this.rerender();
   },
@@ -241,72 +206,76 @@ const APP = {
     );
     if (!rows.length) return;
 
-    const proj    = rows[0];
-    const phases  = UTILS.calcProjectProgress(rows);
-
-    const phaseHtml = rows.map(r => `
+    const proj = rows[0];
+    const taskRows = rows.map(r => `
       <tr>
         <td>${UTILS.esc(r.task)}</td>
-        <td><span class="status-pill ${UTILS.pillClass(UTILS.normalizeStatus(r.progress === 'Complete' ? 'Delivered' : r.progress === 'In progress' ? 'Active' : 'Backlog'))}">${UTILS.esc(r.progress)}</span></td>
+        <td><span class="status-badge ${r.status.toLowerCase().replace(' ','-')}">${UTILS.esc(r.status)}</span></td>
         <td>${UTILS.esc(r.assignedTo)}</td>
-        <td>${UTILS.esc(r.actionHolder)}</td>
         <td>${UTILS.esc(r.dueDate)}</td>
-        <td style="font-size:.72rem;max-width:160px">${UTILS.esc(r.comments)}</td>
-      </tr>`).join('');
+        <td style="font-size:0.8125rem">${UTILS.esc(r.comments || '—')}</td>
+      </tr>
+    `).join('');
 
-    const modal = document.createElement('div');
-    modal.id = 'projModal';
-    modal.style.cssText = `
-      position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;
-      background:rgba(0,0,0,.5);backdrop-filter:blur(4px);animation:fadeIn .15s ease`;
-    modal.innerHTML = `
-      <style>@keyframes fadeIn{from{opacity:0}to{opacity:1}}</style>
-      <div style="background:var(--card);border-radius:16px;width:min(700px,96vw);max-height:85vh;overflow-y:auto;
-                  border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:24px">
-        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
-          <div style="flex:1">
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text)">${UTILS.esc(proj.projectName)}</div>
-            <div style="font-size:.8rem;color:var(--muted);margin-top:3px">${UTILS.esc(proj.initiative)} · ${UTILS.esc(proj.portfolio)} · ID: ${UTILS.esc(proj.projectId)}</div>
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">${UTILS.esc(proj.projectName)}</h2>
+            <p style="font-size:0.875rem;color:var(--text-secondary);margin-top:4px">${UTILS.esc(proj.initiative)} • ${UTILS.esc(proj.portfolio)}</p>
           </div>
-          <span class="status-pill ${UTILS.pillClass(UTILS.normalizeStatus(proj.statusRaw))}">${UTILS.normalizeStatus(proj.statusRaw)}</span>
-          <button onclick="document.getElementById('projModal').remove()"
-                  style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);padding:0 4px">✕</button>
+          <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
         </div>
-        <div style="font-size:.8rem;color:var(--muted);margin-bottom:12px">
-          Priority: <strong>${UTILS.esc(proj.priority)}</strong> &nbsp;·&nbsp;
-          Week of: <strong>${UTILS.esc(proj.weekOf)}</strong>
+        <div class="modal-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+            <div>
+              <div style="font-size:0.8125rem;color:var(--text-tertiary);font-weight:600;margin-bottom:6px">Priority</div>
+              <div style="color:var(--text-primary);font-weight:600">${UTILS.esc(proj.priority)}</div>
+            </div>
+            <div>
+              <div style="font-size:0.8125rem;color:var(--text-tertiary);font-weight:600;margin-bottom:6px">Status</div>
+              <span class="status-badge ${proj.status.toLowerCase().replace(' ','-')}">${proj.status}</span>
+            </div>
+          </div>
+          <div style="margin-bottom:24px">
+            <h3 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:12px">Tasks</h3>
+            <div class="table-container">
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead><tr><th>Task</th><th>Status</th><th>Assigned To</th><th>Due Date</th><th>Notes</th></tr></thead>
+                  <tbody>${taskRows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="table-wrap" style="margin-bottom:0">
-          <table class="tracker">
-            <thead><tr>
-              <th>Task</th><th>Progress</th><th>Assigned To</th>
-              <th>Action Holder</th><th>Due Date</th><th>Comments</th>
-            </tr></thead>
-            <tbody>${phaseHtml}</tbody>
-          </table>
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   },
 
-  // ── EXPORT CSV ────────────────────────────────────
+  // ── EXPORT ──
   exportCSV() {
     const cols = RENDER.ALL_COLS;
-    const header = cols.map(c => c.label).join(',');
-    const rows   = this._filteredRows.map(r =>
+    const header = cols.map(c => `"${c.label}"`).join(',');
+    const rows = this._filteredRows.map(r =>
       cols.map(c => `"${String(r[c.key] || '').replace(/"/g,'""')}"`).join(',')
     );
-    const csv  = [header, ...rows].join('\n');
+    const csv = [header, ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = `EQ_Tracker_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `EQ_Tracker_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
     UTILS.toast('📥 CSV exported');
   },
 
-  // ── THEME ─────────────────────────────────────────
+  // ── THEME ──
   toggleTheme() {
     const next = document.body.classList.contains('dark') ? 'light' : 'dark';
     this.applyTheme(next);
@@ -314,12 +283,11 @@ const APP = {
   },
 
   applyTheme(t) {
-    document.body.classList.toggle('dark',  t === 'dark');
+    document.body.classList.toggle('dark', t === 'dark');
     document.body.classList.toggle('light', t === 'light');
     const label = t === 'dark' ? '☀️ Light' : '🌙 Dark';
-    document.querySelectorAll('#themeBtn,#themeBtn2').forEach(b => b.textContent = label);
+    document.querySelectorAll('#themeLabel').forEach(b => b.textContent = label);
   },
 };
 
-// ── BOOT ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => APP.init());

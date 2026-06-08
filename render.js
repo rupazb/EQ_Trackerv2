@@ -1,12 +1,12 @@
 // ═══════════════════════════════════════════════════════
 //  render.js — All DOM generation from live data
+//  Enterprise dashboard redesign
 // ═══════════════════════════════════════════════════════
 
 const RENDER = {
 
-  // ── STATE (set by APP before calling render fns) ──
+  // ── STATE ──
   _colsVisible: {},
-  _colPanelOpen: false,
   _weeksExpanded: false,
 
   ALL_COLS: [
@@ -26,7 +26,7 @@ const RENDER = {
     { key: 'comments',     label: 'Comments' },
   ],
 
-  DEFAULT_COLS: ['projectName','initiative','task','weekOf','priority','dueDate','progress','status','assignedTo','actionHolder'],
+  DEFAULT_COLS: ['projectName','initiative','task','weekOf','priority','dueDate','progress','status','assignedTo'],
 
   initCols() {
     if (Object.keys(this._colsVisible).length) return;
@@ -35,164 +35,183 @@ const RENDER = {
     });
   },
 
-  // ── LOADING SKELETON ──────────────────────────────
+  // ── SKELETON LOADING ──
   showSkeleton() {
-    const pulse = `<div style="background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:400% 100%;animation:shimmer 1.4s infinite;border-radius:8px;height:36px;margin-bottom:8px"></div>`;
-    const style = `<style>@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}</style>`;
-    document.getElementById('wsRow').innerHTML = style + Array(6).fill(`
-      <div class="ws-card notstart" style="opacity:.5">
-        <div class="ws-card-header">${pulse}${pulse}</div>
-      </div>`).join('');
-    document.getElementById('statsRow').innerHTML = Array(5).fill(`
-      <div class="stat-card" style="opacity:.4">${pulse}</div>`).join('');
+    const shimmerBox = 'style="height:60px;background:var(--border-color);border-radius:8px;margin-bottom:12px;animation:shimmer 1.5s infinite"';
+    document.getElementById('summaryCard').innerHTML = `<div ${shimmerBox}></div>`;
+    document.getElementById('kpiGrid').innerHTML = Array(5).fill(`<div class="kpi-card"><div class="shimmer" style="height:100px"></div></div>`).join('');
+    document.getElementById('projectGrid').innerHTML = Array(6).fill(`<div class="project-card"><div class="shimmer" style="height:200px"></div></div>`).join('');
   },
 
-  // ── STATS ROW ─────────────────────────────────────
+  // ── SUMMARY STATS ──
   renderStats(rows) {
     const projects = UTILS.groupByProject(rows);
     const total    = projects.length;
     const byStatus = { 'In Progress': 0, 'Blocked': 0, 'Not Started': 0, 'Complete': 0 };
     projects.forEach(p => { if (byStatus[p.status] !== undefined) byStatus[p.status]++; });
 
-    const stats = [
-      { label: 'Total Projects',  val: total,                  cls: '',        filter: 'All' },
-      { label: 'In Progress',     val: byStatus['In Progress'], cls: '',        filter: 'In Progress' },
-      { label: 'Blocked',         val: byStatus['Blocked'],     cls: 'red',     filter: 'Blocked' },
-      { label: 'Not Started',     val: byStatus['Not Started'], cls: '',        filter: 'Not Started' },
-      { label: 'Complete',        val: byStatus['Complete'],    cls: 'green',   filter: 'Complete' },
+    const pct = total ? Math.round((byStatus['Complete'] / total) * 100) : 0;
+    const html = `
+      <div class="summary-stat">
+        <span class="summary-stat-value">${total}</span>
+        <span class="summary-stat-label">Total Projects</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-stat-value">${byStatus['In Progress']}</span>
+        <span class="summary-stat-label">Active</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-stat-value">${byStatus['Blocked']}</span>
+        <span class="summary-stat-label">Blocked</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-stat-value">${pct}%</span>
+        <span class="summary-stat-label">Complete</span>
+      </div>
+    `;
+    document.getElementById('summaryStats').innerHTML = html;
+
+    // Render KPI cards
+    const kpiData = [
+      { label: 'Total Projects', value: total, type: 'info' },
+      { label: 'In Progress', value: byStatus['In Progress'], type: 'active' },
+      { label: 'Blocked', value: byStatus['Blocked'], type: 'error' },
+      { label: 'Not Started', value: byStatus['Not Started'], type: 'pending' },
+      { label: 'Complete', value: byStatus['Complete'], type: 'success' },
     ];
 
-    document.getElementById('statsRow').innerHTML = stats.map(s => `
-      <div class="stat-card ${s.cls}" onclick="APP.setFilter('${s.filter}',null)" title="Filter by ${s.label}">
-        <div class="label">${s.label}</div>
-        <div class="val">${s.val}</div>
-      </div>`).join('');
+    document.getElementById('kpiGrid').innerHTML = kpiData.map((kpi, idx) => `
+      <div class="kpi-card ${kpi.type}" onclick="APP.setFilter('${kpi.label}',document.querySelectorAll('.filter-pill')[${idx+1}])" style="cursor:pointer">
+        <div class="kpi-label">${kpi.label}</div>
+        <div class="kpi-value">${kpi.value}</div>
+        <div class="kpi-meta">projects</div>
+      </div>
+    `).join('');
 
-    // Summary banner
-    const pct = total ? Math.round((byStatus['Complete'] / total) * 100) : 0;
-    document.getElementById('summaryText').innerHTML =
-      `<strong>${total}</strong> projects tracked &nbsp;·&nbsp; ` +
-      `<strong>${byStatus['In Progress']}</strong> active &nbsp;·&nbsp; ` +
-      `<strong style="color:#fca5a5">${byStatus['Blocked']}</strong> blocked &nbsp;·&nbsp; ` +
-      `<strong style="color:#86efac">${pct}%</strong> complete`;
+    document.getElementById('projectCount').textContent = `${projects.length} projects`;
   },
 
-  // ── FLOWCHART (initiative cards) ──────────────────
-  renderFlowchart(rows, filterStatus = 'All', searchQuery = '') {
-    const filtered = rows.filter(r =>
-      (filterStatus === 'All' || r.status === filterStatus) &&
-      UTILS.matchesSearch(r, searchQuery)
-    );
-
+  // ── PROJECT CARDS ──
+  renderFlowchart(rows, filterStatus = 'All') {
+    const filtered = rows.filter(r => filterStatus === 'All' || r.status === filterStatus);
     const projects = UTILS.groupByProject(filtered);
-    const wsRow    = document.getElementById('wsRow');
+    const grid = document.getElementById('projectGrid');
 
     if (!projects.length) {
-      wsRow.innerHTML = `<div class="empty-state"><div class="es-icon">🔍</div>No projects match current filters.</div>`;
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px">
+          <div style="font-size:3rem;margin-bottom:16px">🔍</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:8px">No projects found</div>
+          <div style="font-size:0.875rem;color:var(--text-tertiary)">Try adjusting your filters</div>
+        </div>
+      `;
       return;
     }
 
-    wsRow.innerHTML = projects.map(p => this._wsCard(p)).join('');
+    grid.innerHTML = projects.map(p => this._projectCard(p)).join('');
   },
 
-  _wsCard(proj) {
-    const sc     = UTILS.statusClass(proj.status);
-    const dot    = UTILS.priorityDot(proj.priority);
+  _projectCard(proj) {
     const phases = UTILS.calcProjectProgress(proj.tasks);
+    const statusMap = { 'In Progress': 'active', 'Blocked': 'blocked', 'Not Started': 'pending', 'Complete': 'complete' };
+    const statusClass = statusMap[proj.status] || 'pending';
 
-    const phaseRows = [
-      { key: 'Package',    label: 'Pkg',    cls: 'pb-pkg'  },
-      { key: 'Processing', label: 'Proc',   cls: 'pb-proc' },
-      { key: 'Review',     label: 'Rev',    cls: 'pb-rev'  },
-    ].filter(ph => phases[ph.key] !== null && phases[ph.key] !== undefined)
-     .map(ph => {
-       const pct = phases[ph.key];
-       return `
-        <div class="phase-row">
-          <span class="phase-label">${ph.label}</span>
-          <div class="phase-bar-wrap"><div class="phase-bar ${ph.cls}" style="width:${pct}%"></div></div>
-          <span class="phase-val">${pct}%</span>
-        </div>`;
-     }).join('');
-
-    const assignees = [...new Set(proj.tasks.map(t => t.assignedTo).filter(Boolean))];
-    const pocTags   = assignees.slice(0,3).map(a =>
-      `<span class="poc-tag">${UTILS.esc(a)}</span>`).join('');
+    // Calculate average progress
+    const progressValues = Object.values(phases).filter(v => v !== null);
+    const avgProgress = progressValues.length ? Math.round(progressValues.reduce((a,b) => a+b) / progressValues.length) : 0;
 
     return `
-      <div class="ws-card ${sc}" title="${UTILS.esc(proj.projectName)} — ${proj.status}"
-           onclick="APP.showProjectDetail('${UTILS.esc(proj.projectId || proj.projectName)}')">
-        <div class="ws-card-header">
-          <div class="ws-card-name">
-            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${UTILS.esc(proj.projectName)}</span>
-            <span class="dot dot-${dot}"></span>
+      <div class="project-card" onclick="APP.showProjectDetail('${UTILS.esc(proj.projectId || proj.projectName)}'" style="cursor:pointer">
+        <div class="project-card-header">
+          <div class="project-card-title">${UTILS.esc(proj.projectName)}</div>
+          <div class="project-card-meta">
+            <span>${UTILS.esc(proj.initiative)}</span>
+            <span>•</span>
+            <span>${UTILS.esc(proj.portfolio || '—')}</span>
           </div>
-          <div style="font-size:.58rem;color:var(--muted);margin-bottom:3px;font-weight:600">${UTILS.esc(proj.initiative)}</div>
-          <div class="poc-row">${pocTags}</div>
         </div>
-        <div class="ws-card-phases">${phaseRows || '<div style="font-size:.65rem;color:var(--muted);padding:4px 0">No task phases</div>'}</div>
-        <div class="ws-card-footer">
-          <span>${UTILS.esc(proj.portfolio || '')}</span>
-          <strong class="${UTILS.pillClass(proj.status)}" style="font-size:.62rem;padding:2px 6px;border-radius:99px">
-            ${proj.status}
-          </strong>
+        <div class="project-card-body">
+          <div class="project-card-row">
+            <div>
+              <div class="project-card-label">Overall Progress</div>
+              <div class="progress-bar" style="margin-top:6px">
+                <div class="progress-fill" style="width:${avgProgress}%"></div>
+              </div>
+            </div>
+            <div class="project-card-value">${avgProgress}%</div>
+          </div>
+          <div class="project-card-row" style="justify-content:space-between">
+            <span class="project-card-label">Status</span>
+            <span class="status-badge ${statusClass}">${proj.status}</span>
+          </div>
+          <div class="project-card-row" style="justify-content:space-between">
+            <span class="project-card-label">Due Date</span>
+            <span class="project-card-value">${UTILS.esc(proj.tasks[0]?.dueDate || '—')}</span>
+          </div>
         </div>
-      </div>`;
+      </div>
+    `;
   },
 
-  // ── WEEKLY ACCORDIONS ─────────────────────────────
+  // ── WEEKLY BREAKDOWN ──
   renderWeeklyAccordions(rows) {
-    const byWeek  = UTILS.groupByWeek(rows);
-    const weeks   = Array.from(byWeek.keys()).filter(w => w && w !== 'unassigned');
-    const container = document.getElementById('weeklyAccordions');
+    const byWeek = UTILS.groupByWeek(rows);
+    const weeks = Array.from(byWeek.keys()).filter(w => w && w !== 'unassigned');
+    const container = document.getElementById('weeklyBreakdown');
+
+    if (!weeks.length) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">No weeks available</div></div>`;
+      return;
+    }
 
     container.innerHTML = weeks.map((week, i) => {
       const weekRows = byWeek.get(week);
       const projects = UTILS.groupByProject(weekRows);
-      const counts   = { 'In Progress': 0, 'Blocked': 0, 'Not Started': 0, 'Complete': 0 };
+      const counts = { 'In Progress': 0, 'Blocked': 0, 'Not Started': 0, 'Complete': 0 };
       projects.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++; });
-      const meta = `${projects.length} projects · ${counts['In Progress']} active · ${counts['Blocked']} blocked`;
 
       return `
-        <div class="weekly-accordion" id="wacc-${i}">
-          <div class="weekly-acc-header" onclick="RENDER.toggleWeekAccordion(${i})">
-            <span class="weekly-acc-title">📅 Week of ${UTILS.esc(week)}</span>
-            <span class="weekly-acc-meta">${meta}</span>
-            <span class="weekly-acc-arrow" id="warrow-${i}">▶</span>
-          </div>
-          <div class="weekly-acc-body" id="wbody-${i}">
-            <div class="ws-row" style="justify-content:flex-start;flex-wrap:wrap;gap:10px">
-              ${projects.map(p => this._wsCard(p)).join('')}
+        <div style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-secondary);border-radius:8px;cursor:pointer" onclick="RENDER.toggleWeek(${i})" id="week-toggle-${i}">
+            <span style="font-size:1rem">📅</span>
+            <div style="flex:1">
+              <div style="font-weight:700;color:var(--text-primary)">Week of ${UTILS.esc(week)}</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary);margin-top:2px">${projects.length} projects • ${counts['In Progress']} active • ${counts['Blocked']} blocked</div>
             </div>
+            <span id="week-arrow-${i}" style="font-size:0.8rem;color:var(--text-tertiary)">▶</span>
           </div>
-        </div>`;
+          <div id="week-body-${i}" style="display:none;margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">
+            ${projects.map(p => this._projectCard(p)).join('')}
+          </div>
+        </div>
+      `;
     }).join('');
   },
 
-  toggleWeekAccordion(i) {
-    const body  = document.getElementById(`wbody-${i}`);
-    const arrow = document.getElementById(`warrow-${i}`);
-    const open  = body.classList.toggle('open');
-    arrow.textContent = open ? '▼' : '▶';
+  toggleWeek(i) {
+    const body = document.getElementById(`week-body-${i}`);
+    const arrow = document.getElementById(`week-arrow-${i}`);
+    const isOpen = body.style.display === 'grid';
+    body.style.display = isOpen ? 'none' : 'grid';
+    arrow.textContent = isOpen ? '▶' : '▼';
   },
 
   toggleAllWeeks() {
     this._weeksExpanded = !this._weeksExpanded;
-    document.querySelectorAll('.weekly-acc-body').forEach((b, i) => {
-      const arrow = document.getElementById(`warrow-${i}`);
+    document.querySelectorAll('[id^="week-body-"]').forEach((b, i) => {
+      const arrow = document.getElementById(`week-arrow-${i}`);
       if (this._weeksExpanded) {
-        b.classList.add('open');
+        b.style.display = 'grid';
         if (arrow) arrow.textContent = '▼';
       } else {
-        b.classList.remove('open');
+        b.style.display = 'none';
         if (arrow) arrow.textContent = '▶';
       }
     });
-    document.getElementById('weekAccToggle').textContent =
-      this._weeksExpanded ? 'Collapse all weeks' : 'Expand all weeks';
+    document.getElementById('weekToggleBtn').textContent = this._weeksExpanded ? 'Collapse all' : 'Expand all';
   },
 
-  // ── KANBAN BOARD ──────────────────────────────────
+  // ── KANBAN BOARD ──
   renderKanban(rows, weekFilter = null) {
     const projects = UTILS.groupByProject(rows);
     const filtered = weekFilter
@@ -200,27 +219,29 @@ const RENDER = {
       : projects;
 
     const cols = [
-      { key: 'Not Started', cls: 'k-notstart', icon: '⏸', label: 'Not Started' },
-      { key: 'In Progress', cls: 'k-inprog',   icon: '▶', label: 'In Progress' },
-      { key: 'Blocked',     cls: 'k-blocked',  icon: '🚫', label: 'Blocked'     },
-      { key: 'Complete',    cls: 'k-complete', icon: '✅', label: 'Complete'    },
+      { key: 'Not Started', label: 'Not Started', icon: '⏸', color: 'pending' },
+      { key: 'In Progress', label: 'In Progress', icon: '▶', color: 'active' },
+      { key: 'Blocked',     label: 'Blocked',     icon: '🚫', color: 'blocked' },
+      { key: 'Complete',    label: 'Complete',    icon: '✅', color: 'complete' },
     ];
 
     const board = document.getElementById('kanbanBoard');
     board.innerHTML = cols.map(col => {
       const cards = filtered.filter(p => p.status === col.key);
       return `
-        <div class="kanban-col ${col.cls}" id="kc-${col.key.replace(' ','-')}"
-             ondragover="event.preventDefault();this.classList.add('drag-over')"
-             ondragleave="this.classList.remove('drag-over')"
-             ondrop="RENDER.onKanbanDrop(event,'${col.key}')">
-          <div class="kanban-col-header">
-            ${col.icon} ${col.label}
-            <span class="kanban-count">${cards.length}</span>
+        <div class="kanban-column">
+          <div class="kanban-header">
+            <div class="kanban-title">
+              <span>${col.icon}</span>
+              <span>${col.label}</span>
+            </div>
+            <div class="kanban-count">${cards.length}</div>
           </div>
-          ${cards.map(p => this._kanbanCard(p)).join('') ||
-            '<div style="color:var(--muted);font-size:.75rem;text-align:center;padding:20px 0">No projects</div>'}
-        </div>`;
+          <div class="kanban-items">
+            ${cards.map(p => this._kanbanCard(p)).join('') || '<div style="color:var(--text-tertiary);font-size:0.875rem;text-align:center;padding:20px 0">No projects</div>'}
+          </div>
+        </div>
+      `;
     }).join('');
 
     const monthLabel = weekFilter ? `Week of ${weekFilter}` : 'All Projects';
@@ -228,118 +249,60 @@ const RENDER = {
   },
 
   _kanbanCard(proj) {
+    const statusMap = { 'In Progress': 'active', 'Blocked': 'blocked', 'Not Started': 'pending', 'Complete': 'complete' };
+    const statusClass = statusMap[proj.status] || 'pending';
     const assignees = [...new Set(proj.tasks.map(t => t.assignedTo).filter(Boolean))].slice(0,2).join(', ');
+
     return `
-      <div class="kanban-card" draggable="true"
-           ondragstart="RENDER.onKanbanDragStart(event,'${UTILS.esc(proj.projectId || proj.projectName)}')"
-           onclick="APP.showProjectDetail('${UTILS.esc(proj.projectId || proj.projectName)}')">
-        <div class="kanban-card-name">${UTILS.esc(proj.projectName)}</div>
-        <div class="kanban-card-meta">
-          ${UTILS.esc(proj.initiative)}
-          ${assignees ? ' · ' + UTILS.esc(assignees) : ''}
+      <div class="kanban-card" onclick="APP.showProjectDetail('${UTILS.esc(proj.projectId || proj.projectName)}'" style="cursor:pointer">
+        <div class="kanban-card-title">${UTILS.esc(proj.projectName)}</div>
+        <div class="kanban-card-meta">${UTILS.esc(proj.initiative)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <span class="status-badge ${statusClass}">${proj.status}</span>
+          ${assignees ? `<span style="font-size:0.75rem;color:var(--text-tertiary)">${UTILS.esc(assignees)}</span>` : ''}
         </div>
-        <div class="kanban-card-meta" style="margin-top:4px">
-          <span class="status-pill ${UTILS.pillClass(proj.status)}" style="font-size:.6rem">${proj.status}</span>
-          ${proj.portfolio ? `<span style="margin-left:6px;font-size:.66rem;color:var(--muted)">${UTILS.esc(proj.portfolio)}</span>` : ''}
-        </div>
-      </div>`;
+      </div>
+    `;
   },
 
-  _dragId: null,
-  onKanbanDragStart(e, id) {
-    this._dragId = id;
-    e.dataTransfer.effectAllowed = 'move';
-  },
-  onKanbanDrop(e, newStatus) {
-    e.currentTarget.classList.remove('drag-over');
-    UTILS.toast(`Drag-and-drop is view-only. Edit status in Google Sheets to persist.`, 'warn');
-  },
-
-  // ── DATA TABLE ────────────────────────────────────
+  // ── DATA TABLE ──
   renderTable(rows) {
     this.initCols();
     const visCols = this.ALL_COLS.filter(c => this._colsVisible[c.key]);
 
     // Header
     document.getElementById('headerRow').innerHTML = visCols.map(c =>
-      `<th onclick="APP.sortBy('${c.key}')">
-         <div class="th-inner">${c.label} <span style="opacity:.5;font-size:.65rem">↕</span></div>
-       </th>`
+      `<th onclick="APP.sortBy('${c.key}')" style="cursor:pointer">${c.label} <span style="opacity:0.5;font-size:0.75rem">↕</span></th>`
     ).join('');
 
     // Body
     const tbody = document.getElementById('tableBody');
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="${visCols.length}" class="empty-state">
-        <div class="es-icon">📭</div>No rows match current filters.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${visCols.length}" style="text-align:center;padding:40px 20px;color:var(--text-tertiary)">No projects match current filters</td></tr>`;
       return;
     }
 
     tbody.innerHTML = rows.map(r => {
       return `<tr>` + visCols.map(c => {
         if (c.key === 'status') {
-          return `<td><span class="status-pill ${UTILS.pillClass(r.status)}">${UTILS.esc(r.status)}</span></td>`;
+          const statusMap = { 'In Progress': 'active', 'Blocked': 'blocked', 'Not Started': 'pending', 'Complete': 'complete' };
+          return `<td><span class="status-badge ${statusMap[r.status] || 'pending'}">${UTILS.esc(r.status)}</span></td>`;
         }
         if (c.key === 'progress') {
           const pct = UTILS.progressToPercent(r.progress);
-          return `<td>
-            <div style="display:flex;align-items:center;gap:6px;justify-content:center">
-              <div style="width:50px;background:var(--border);border-radius:99px;height:5px;flex-shrink:0">
-                <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green)':pct>0?'var(--blue-lt)':'var(--border)'};border-radius:99px;transition:.3s"></div>
-              </div>
-              <span style="font-size:.7rem;font-weight:600">${pct}%</span>
-            </div></td>`;
+          return `<td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:4px;background:var(--border-color);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--blue)"></div></div><span style="font-size:0.75rem;font-weight:700">${pct}%</span></div></td>`;
         }
         return `<td>${UTILS.esc(r[c.key] || '—')}</td>`;
       }).join('') + `</tr>`;
     }).join('');
   },
 
-  // ── COLUMN TOGGLE PANEL ───────────────────────────
-  renderColPanel() {
-    const panel = document.getElementById('colTogglePanel');
-    panel.innerHTML = `<div class="col-toggle-title">Toggle Columns</div>` +
-      this.ALL_COLS.map(c => `
-        <label class="col-toggle-item">
-          <input type="checkbox" ${this._colsVisible[c.key] ? 'checked' : ''}
-                 onchange="RENDER.toggleCol('${c.key}',this.checked)">
-          ${c.label}
-        </label>`).join('');
-  },
-
-  toggleCol(key, visible) {
-    this._colsVisible[key] = visible;
-    APP.rerender();
-  },
-
-  toggleColPanel() {
-    this._colPanelOpen = !this._colPanelOpen;
-    const panel = document.getElementById('colTogglePanel');
-    if (this._colPanelOpen) {
-      this.renderColPanel();
-      panel.classList.add('open');
-      // Close when clicking outside
-      setTimeout(() => {
-        document.addEventListener('click', function closer(e) {
-          if (!panel.contains(e.target)) {
-            panel.classList.remove('open');
-            RENDER._colPanelOpen = false;
-            document.removeEventListener('click', closer);
-          }
-        });
-      }, 10);
-    } else {
-      panel.classList.remove('open');
-    }
-  },
-
-  // ── SIDEBAR MONTH/WEEK NAV ────────────────────────
+  // ── SIDEBAR NAV ──
   renderSidebarNav(rows) {
-    const byWeek    = UTILS.groupByWeek(rows);
-    const weeks     = Array.from(byWeek.keys()).filter(w => w && w !== 'unassigned');
+    const byWeek = UTILS.groupByWeek(rows);
+    const weeks = Array.from(byWeek.keys()).filter(w => w && w !== 'unassigned');
     const container = document.getElementById('monthNav');
 
-    // Group by month (approximate from week label text)
     const grouped = {};
     weeks.forEach(w => {
       const month = this._extractMonth(w);
@@ -349,18 +312,16 @@ const RENDER = {
 
     container.innerHTML = Object.entries(grouped).map(([month, weekList], mi) => `
       <div class="nav-month-group">
-        <div class="nav-month-toggle" id="mnt-${mi}" onclick="RENDER.toggleMonthGroup(${mi})">
+        <div class="nav-month-toggle" onclick="RENDER.toggleMonthGroup(${mi})" id="mnt-${mi}">
           <span class="nav-icon">📅</span>
           <span>${month}</span>
           <span class="arrow">▶</span>
         </div>
         <div class="nav-month-weeks" id="mnw-${mi}">
-          ${weekList.map(w => `
-            <div class="nav-week-item" onclick="APP.filterByWeek('${UTILS.esc(w)}',this)">
-              Wk of ${UTILS.esc(w)}
-            </div>`).join('')}
+          ${weekList.map(w => `<div class="nav-week-item" onclick="APP.filterByWeek('${UTILS.esc(w)}',this)">Wk ${UTILS.esc(w.slice(0,10))}</div>`).join('')}
         </div>
-      </div>`).join('');
+      </div>
+    `).join('');
   },
 
   _extractMonth(weekStr) {
@@ -368,14 +329,13 @@ const RENDER = {
     for (const m of months) {
       if (weekStr.toLowerCase().includes(m.toLowerCase())) return m + ' 2026';
     }
-    if (weekStr === 'historic') return 'Historic';
     return 'Other';
   },
 
   toggleMonthGroup(i) {
     const toggle = document.getElementById(`mnt-${i}`);
-    const weeks  = document.getElementById(`mnw-${i}`);
-    const open   = weeks.classList.toggle('open');
-    toggle.classList.toggle('open', open);
+    const weeks = document.getElementById(`mnw-${i}`);
+    const isOpen = weeks.classList.toggle('open');
+    toggle.classList.toggle('open', isOpen);
   },
 };
