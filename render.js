@@ -31,6 +31,20 @@ const RENDER = {
     });
   },
 
+  // ── SKELETON LOADER ──
+  showSkeleton() {
+    const container = document.getElementById('kpiGrid');
+    if (container) {
+      container.innerHTML = `
+        <div style="padding:40px;text-align:center;color:var(--text-tertiary)">
+          <div style="font-size:2rem;margin-bottom:16px;animation:pulse 1.5s infinite">⏳</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:8px">Loading data…</div>
+          <p style="font-size:0.875rem">Fetching your Google Sheet</p>
+        </div>
+      `;
+    }
+  },
+
   // ── KPI RENDERING ──
   renderStats(rows) {
     const projects = UTILS.groupByProject(rows);
@@ -194,7 +208,8 @@ const RENDER = {
     }).join('');
 
     const monthLabel = weekFilter ? `Week of ${weekFilter}` : 'All Projects';
-    document.getElementById('kanbanMonth').textContent = monthLabel;
+    const kanbanMonth = document.getElementById('kanbanMonth');
+    if (kanbanMonth) kanbanMonth.textContent = monthLabel;
   },
 
   _kanbanCard(proj) {
@@ -237,7 +252,7 @@ const RENDER = {
         }
         if (c.key === 'progress') {
           const pct = UTILS.progressToPercent(r.progress);
-          return `<td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:4px;background:var(--border-color);border-radius:2px;overflow:hidden"><div style="width:${pct}%;background:#2563eb;height:100%"></div></div><span style="font-size:11px;color:var(--text-secondary)">${pct}%</span></div></td>`;
+          return `<td><div style="display:flex;align-items:center;gap:8px"><div style="width:60px;height:4px;background:var(--border-color);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,var(--color-primary),#3b82f6)"></div></div><span style="font-size:12px;color:var(--text-secondary)">${pct}%</span></div></td>`;
         }
         return `<td>${UTILS.esc(r[c.key] || '—')}</td>`;
       }).join('') + `</tr>`;
@@ -249,6 +264,11 @@ const RENDER = {
     const byWeek = UTILS.groupByWeek(rows);
     const weeks = Array.from(byWeek.keys()).filter(w => w && w !== 'Unassigned');
     const container = document.getElementById('weekNav');
+
+    if (!weeks.length) {
+      container.innerHTML = '<div style="padding:12px 16px;font-size:12px;color:var(--text-tertiary)">No weeks scheduled</div>';
+      return;
+    }
 
     const grouped = {};
     weeks.forEach(w => {

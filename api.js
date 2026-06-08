@@ -46,35 +46,41 @@ const API = {
     }
 
     const rows = this._parseCSV(text);
+    if (!rows.length) {
+      throw new Error('No data rows found in Google Sheet. Check your sheet has data and columns.');
+    }
     return this._parseRows(rows);
   },
 
   // ── CSV TEXT PARSER ───────────────────────────────
   // Handles quoted fields, commas inside quotes, newlines inside quotes
   _parseCSV(text) {
+    // Normalize line endings: convert CRLF and CR to LF
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
     const lines = [];
     let cur = '';
     let inQuotes = false;
 
     for (let i = 0; i < text.length; i++) {
-      const ch   = text[i];
+      const ch = text[i];
       const next = text[i + 1];
 
       if (ch === '"') {
-        if (inQuotes && next === '"') { cur += '"'; i++; } // escaped quote
-        else inQuotes = !inQuotes;
+        if (inQuotes && next === '"') { 
+          cur += '"'; 
+          i++; 
+        } else {
+          inQuotes = !inQuotes;
+        }
       } else if (ch === '\n' && !inQuotes) {
-        lines.push(cur);
+        if (cur.trim()) lines.push(cur);
         cur = '';
-      } else if (ch === '\r' && next === '\n' && !inQuotes) {
-        lines.push(cur);
-        cur = '';
-        i++; // skip \n
       } else {
         cur += ch;
       }
     }
-    if (cur) lines.push(cur);
+    if (cur.trim()) lines.push(cur);
 
     // Split each line into cells
     const splitLine = (line) => {
@@ -82,11 +88,15 @@ const API = {
       let cell = '';
       let inQ = false;
       for (let i = 0; i < line.length; i++) {
-        const c  = line[i];
+        const c = line[i];
         const nx = line[i + 1];
         if (c === '"') {
-          if (inQ && nx === '"') { cell += '"'; i++; }
-          else inQ = !inQ;
+          if (inQ && nx === '"') { 
+            cell += '"'; 
+            i++; 
+          } else {
+            inQ = !inQ;
+          }
         } else if (c === ',' && !inQ) {
           cells.push(cell);
           cell = '';
@@ -99,13 +109,13 @@ const API = {
     };
 
     if (!lines.length) return [];
+    
     const headers = splitLine(lines[0]);
-    const result  = [];
+    const result = [];
 
     for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
       const cells = splitLine(lines[i]);
-      const row   = {};
+      const row = {};
       headers.forEach((h, j) => {
         row[h.trim()] = (cells[j] || '').trim();
       });
@@ -143,7 +153,7 @@ const API = {
     return rawRows
       .filter(r => {
         const name = r[C.PROJECT_NAME] || r['Project Name'] || '';
-        const id   = r[C.PROJECT_ID]   || r['Project ID']   || '';
+        const id = r[C.PROJECT_ID] || r['Project ID'] || '';
         return name.trim() !== '' || id.toString().trim() !== '';
       })
       .map((r, idx) => {
@@ -166,37 +176,37 @@ const API = {
         }
         if (!statusRaw) statusRaw = raw(C.STATUS) || raw('Status') || '';
 
-        const progressRaw    = raw(C.PROGRESS)     || raw('Progress')        || '';
-        const taskRaw        = raw(C.TASKS)         || raw('Tasks')           || raw('Task') || '';
-        const assignedRaw    = raw(C.ASSIGNED_TO)   || raw('Assigned to')     || raw('Assigned To') || '';
-        const actionRaw      = raw(C.ACTION_HOLDER) || raw('Action Holder')   || '';
-        const portfolioRaw   = raw(C.PORTFOLIO)     || raw('Portfolio')       || '';
-        const weekOfRaw      = raw(C.WEEK_OF)       || raw('Starting week of') || '';
-        const priorityRaw    = raw(C.PRIORITY)      || raw('Priority')        || '';
-        const initiativeRaw  = raw(C.INITIATIVE)    || raw('Initiative')      || '';
-        const projectId      = raw(C.PROJECT_ID)    || raw('Project ID')      || '';
-        const projectName    = raw(C.PROJECT_NAME)  || raw('Project Name')    || '';
-        const dueDateRaw     = raw(C.DUE_DATE)      || raw('Due Date')        || '';
-        const endDateRaw     = raw(C.END_DATE)      || raw('End Date')        || '';
-        const commentsRaw    = raw(C.COMMENTS)      || raw('Comments')        || '';
+        const progressRaw = raw(C.PROGRESS) || raw('Progress') || '';
+        const taskRaw = raw(C.TASKS) || raw('Tasks') || raw('Task') || '';
+        const assignedRaw = raw(C.ASSIGNED_TO) || raw('Assigned to') || raw('Assigned To') || '';
+        const actionRaw = raw(C.ACTION_HOLDER) || raw('Action Holder') || '';
+        const portfolioRaw = raw(C.PORTFOLIO) || raw('Portfolio') || '';
+        const weekOfRaw = raw(C.WEEK_OF) || raw('Starting week of') || '';
+        const priorityRaw = raw(C.PRIORITY) || raw('Priority') || '';
+        const initiativeRaw = raw(C.INITIATIVE) || raw('Initiative') || '';
+        const projectId = raw(C.PROJECT_ID) || raw('Project ID') || '';
+        const projectName = raw(C.PROJECT_NAME) || raw('Project Name') || '';
+        const dueDateRaw = raw(C.DUE_DATE) || raw('Due Date') || '';
+        const endDateRaw = raw(C.END_DATE) || raw('End Date') || '';
+        const commentsRaw = raw(C.COMMENTS) || raw('Comments') || '';
 
         return {
-          _idx:         idx,
-          projectId:    String(projectId).trim(),
-          projectName:  String(projectName).trim(),
-          initiative:   String(initiativeRaw).trim(),
-          task:         String(taskRaw).trim(),
-          weekOf:       String(weekOfRaw).trim(),
-          priority:     String(priorityRaw).trim(),
-          dueDate:      UTILS.formatDate(dueDateRaw),
-          progress:     String(progressRaw).trim(),
-          endDate:      UTILS.formatDate(endDateRaw),
-          assignedTo:   String(assignedRaw).trim(),
+          _idx: idx,
+          projectId: String(projectId).trim(),
+          projectName: String(projectName).trim(),
+          initiative: String(initiativeRaw).trim(),
+          task: String(taskRaw).trim(),
+          weekOf: String(weekOfRaw).trim(),
+          priority: String(priorityRaw).trim(),
+          dueDate: UTILS.formatDate(dueDateRaw),
+          progress: String(progressRaw).trim(),
+          endDate: UTILS.formatDate(endDateRaw),
+          assignedTo: String(assignedRaw).trim(),
           actionHolder: String(actionRaw).trim(),
-          comments:     String(commentsRaw).trim(),
-          portfolio:    String(portfolioRaw).trim(),
-          statusRaw:    String(statusRaw).trim(),
-          status:       UTILS.normalizeStatus(statusRaw),
+          comments: String(commentsRaw).trim(),
+          portfolio: String(portfolioRaw).trim(),
+          statusRaw: String(statusRaw).trim(),
+          status: UTILS.normalizeStatus(statusRaw),
         };
       });
   },

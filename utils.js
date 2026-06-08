@@ -12,6 +12,34 @@ const UTILS = {
     return div.innerHTML;
   },
 
+  // ── DATE FORMATTING ──
+  formatDate(dateStr) {
+    if (!dateStr || dateStr.trim() === '') return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr; // Return as-is if invalid
+      return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    } catch (e) {
+      return dateStr;
+    }
+  },
+
+  // ── STATUS NORMALIZATION ──
+  normalizeStatus(status) {
+    if (!status) return 'Not Started';
+    const map = CONFIG.STATUS_MAP || {};
+    const normalized = map[status.trim()];
+    if (normalized) return normalized;
+    
+    // Fallback mapping
+    const s = status.toLowerCase().trim();
+    if (s === 'active' || s === 'in progress') return 'In Progress';
+    if (s === 'blocked') return 'Blocked';
+    if (s === 'backlog' || s === 'not started' || s === 'yet to start') return 'Not Started';
+    if (s === 'delivered' || s === 'complete' || s === 'completed') return 'Complete';
+    return 'Not Started';
+  },
+
   // ── GROUPING ──
   groupByProject(rows) {
     const map = new Map();
