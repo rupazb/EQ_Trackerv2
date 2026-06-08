@@ -1,380 +1,1261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>EQ Project Tracker — Live Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<style>
-/* ─── RESET ─── */
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --navy:#0f1e3d;--navy2:#1a2e54;--blue:#2563eb;--blue-lt:#3b82f6;
-  --teal:#0d9488;--green:#16a34a;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;--gold:#f59e0b;
-  --bg:#eef2f7;--card:#fff;--border:#d1d9e6;--text:#1e2b45;--muted:#6b7a99;
-  --inprog:#dcfce7;--inprog-fg:#15803d;--inprog-bdr:#16a34a;
-  --notstart:#fef9c3;--notstart-fg:#854d0e;--notstart-bdr:#ca8a04;
-  --blocked:#fee2e2;--blocked-fg:#b91c1c;--blocked-bdr:#dc2626;
-  --complete:#dbeafe;--complete-fg:#1d4ed8;--complete-bdr:#2563eb;
-  --sidebar-w:220px;
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>EQ Project Tracker — Enterprise Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+/* ═══════════════════════════════════════════════════════
+   ENTERPRISE DASHBOARD v2 — PREMIUM STYLING
+   Modern SaaS Design inspired by Linear, Vercel, Notion
+═══════════════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;transition:background .3s,color .3s}
-body.dark{--bg:#0f1520;--card:#1a2235;--text:#e2e8f4;--muted:#8899bb;--border:#2a3a55;--navy:#1a2845;--navy2:#253660;
-  --inprog:#0d2e1a;--inprog-fg:#86efac;--inprog-bdr:#16a34a;
-  --notstart:#2a2208;--notstart-fg:#fde68a;--notstart-bdr:#ca8a04;
-  --blocked:#2d0a0a;--blocked-fg:#fca5a5;--blocked-bdr:#dc2626;
-  --complete:#0d1e40;--complete-fg:#93c5fd;--complete-bdr:#2563eb;
+
+:root {
+  /* ─── SEMANTIC PALETTE ─── */
+  --color-primary:      #2563eb;
+  --color-primary-dim:  #dbeafe;
+  --color-success:      #16a34a;
+  --color-success-dim:  #dcfce7;
+  --color-warning:      #d97706;
+  --color-warning-dim:  #fef3c7;
+  --color-error:        #dc2626;
+  --color-error-dim:    #fee2e2;
+  --color-neutral:      #6b7280;
+
+  /* ─── MONOCHROME SYSTEM ─── */
+  --bg-primary:         #ffffff;
+  --bg-secondary:       #f9fafb;
+  --bg-tertiary:        #f3f4f6;
+  --bg-overlay:         rgba(0,0,0,0.5);
+
+  --text-primary:       #111827;
+  --text-secondary:     #4b5563;
+  --text-tertiary:      #9ca3af;
+  --text-inverse:       #ffffff;
+
+  --border-color:       #e5e7eb;
+  --border-light:       #f3f4f6;
+  --border-focus:       #2563eb;
+
+  --shadow-xs:          0 1px 2px 0 rgba(0,0,0,0.05);
+  --shadow-sm:          0 1px 2px 0 rgba(0,0,0,0.05), 0 1px 3px 0 rgba(0,0,0,0.1);
+  --shadow-md:          0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg:          0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  --shadow-xl:          0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+
+  --radius-sm:          6px;
+  --radius-md:          8px;
+  --radius-lg:          12px;
+
+  --spacing-xs:         4px;
+  --spacing-sm:         8px;
+  --spacing-md:         16px;
+  --spacing-lg:         24px;
+  --spacing-xl:         32px;
+}
+
+body.dark {
+  --bg-primary:         #0f1117;
+  --bg-secondary:       #161b22;
+  --bg-tertiary:        #21262d;
+  --text-primary:       #e6edf3;
+  --text-secondary:     #8b949e;
+  --text-tertiary:      #6e7681;
+  --border-color:       #30363d;
+  --border-light:       #21262d;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.3s, color 0.3s;
 }
 
 /* ─── LAYOUT ─── */
-.app{display:flex;flex:1;overflow:hidden;height:100vh}
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
-/* ─── SIDEBAR ─── */
-.sidebar{width:var(--sidebar-w);background:var(--navy);display:flex;flex-direction:column;flex-shrink:0;border-right:3px solid var(--gold);z-index:10;transition:background .3s}
-.sidebar-logo{padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.1)}
-.sidebar-logo h1{font-family:'Space Grotesk',sans-serif;color:#fff;font-size:.95rem;font-weight:700;letter-spacing:-.3px;line-height:1.3}
-.sidebar-logo p{font-size:.68rem;color:#94a3b8;margin-top:2px;display:flex;align-items:center;gap:5px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:#86efac;animation:livePulse 2s infinite}
-@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-.sidebar-nav{flex:1;overflow-y:auto;padding:10px 0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
-.nav-section{padding:8px 14px 4px;font-size:.62rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.1em}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;color:#cbd5e1;font-size:.82rem;font-weight:500;transition:.12s;border-left:3px solid transparent;user-select:none}
-.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
-.nav-item.active{background:rgba(245,158,11,.13);color:var(--gold);border-left-color:var(--gold)}
-.nav-item .nav-icon{font-size:.95rem;flex-shrink:0;width:18px;text-align:center}
-.nav-month-group{border-bottom:1px solid rgba(255,255,255,.05)}
-.nav-month-toggle{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;color:#94a3b8;font-size:.78rem;font-weight:500;transition:.12s;user-select:none}
-.nav-month-toggle:hover{color:#fff;background:rgba(255,255,255,.05)}
-.nav-month-toggle.open .arrow{transform:rotate(90deg)}
-.arrow{font-size:.6rem;margin-left:auto;transition:transform .2s}
-.nav-month-weeks{display:none}
-.nav-month-weeks.open{display:block}
-.nav-week-item{padding:5px 14px 5px 36px;font-size:.76rem;color:#64748b;cursor:pointer;border-left:2px solid transparent;transition:.12s}
-.nav-week-item:hover{color:#cbd5e1;border-left-color:#475569}
-.nav-week-item.active{color:var(--gold);border-left-color:var(--gold)}
-.sidebar-bottom{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:6px}
-.sidebar-bottom-btn{flex:1;padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#94a3b8;font-size:.72rem;font-weight:500;cursor:pointer;transition:.12s;text-align:center}
-.sidebar-bottom-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════════ */
+.sidebar {
+  width: 260px;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
 
-/* ─── MAIN ─── */
-.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0}
-.topbar{background:var(--navy2);padding:10px 22px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;transition:background .3s}
-.topbar-title{font-family:'Space Grotesk',sans-serif;color:#fff;font-size:.98rem;font-weight:700}
-.topbar-breadcrumb{font-size:.74rem;color:#475569}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.sync-badge{font-size:.72rem;font-weight:600;color:#86efac;transition:color .3s}
-.last-sync{font-size:.67rem;color:#475569}
-.theme-toggle,.refresh-btn{background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#94a3b8;padding:5px 10px;cursor:pointer;font-size:.73rem;transition:.14s;font-family:'DM Sans',sans-serif}
-.theme-toggle:hover,.refresh-btn:hover{background:rgba(255,255,255,.08);color:#fff}
-.content{flex:1;overflow-y:auto;padding:18px 22px;scroll-behavior:smooth}
-.view{display:none}
-.view.active{display:block}
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
 
-/* ─── SEARCH BAR ─── */
-.search-wrap{position:relative;margin-bottom:14px}
-.search-input{width:100%;padding:8px 36px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.83rem;background:var(--card);color:var(--text);outline:none;transition:.15s}
-.search-input:focus{border-color:var(--blue-lt);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
-.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.9rem;pointer-events:none}
-.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);cursor:pointer;font-size:.8rem;padding:3px 5px;border-radius:4px;transition:.1s}
-.search-clear:hover{background:var(--bg);color:var(--text)}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
 
-/* ─── SUMMARY BANNER ─── */
-.summary-banner{background:linear-gradient(135deg,var(--navy2) 0%,#1e3a6e 100%);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:13px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.12)}
-.sb-icon{font-size:1.3rem;flex-shrink:0}
-.sb-text{font-size:.88rem;line-height:1.6}
-.sb-text strong{color:var(--gold)}
+.sidebar-logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 16px;
+}
 
-/* ─── STATS ─── */
-.stats{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 14px;flex:1;min-width:100px;position:relative;overflow:hidden;cursor:pointer;transition:.15s}
-.stat-card:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(0,0,0,.12)}
-.stat-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--blue)}
-.stat-card.green::before{background:var(--green)}
-.stat-card.red::before{background:var(--red)}
-.stat-card.purple::before{background:var(--purple)}
-.stat-card .label{font-size:.66rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-.stat-card .val{font-size:1.45rem;font-weight:700;font-family:'Space Grotesk',sans-serif;line-height:1.1;margin-top:2px}
+.sidebar-logo h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
 
-/* ─── FILTER BAR ─── */
-.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-.filter-pill{padding:5px 14px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);font-size:.77rem;font-weight:600;cursor:pointer;transition:.14s;color:var(--muted)}
-.filter-pill:hover{border-color:var(--blue-lt);color:var(--blue)}
-.filter-pill.active{background:var(--navy2);color:#fff;border-color:var(--navy2)}
-.filter-pill.fp-inprog.active{background:var(--inprog-bdr);border-color:var(--inprog-bdr)}
-.filter-pill.fp-blocked.active{background:var(--blocked-bdr);border-color:var(--blocked-bdr)}
-.filter-pill.fp-notstart.active{background:var(--notstart-bdr);border-color:var(--notstart-bdr)}
-.filter-pill.fp-complete.active{background:var(--complete-bdr);border-color:var(--complete-bdr)}
-.filter-label{font-size:.74rem;color:var(--muted);font-weight:500;margin-right:2px}
+.sidebar-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-/* ─── FLOWCHART ─── */
-.chart-section{margin-bottom:28px}
-.chart-section-title{font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:10px;padding:0 4px;display:flex;align-items:center;gap:8px}
-.week-toggle{font-size:.73rem;font-weight:600;color:var(--blue);cursor:pointer;margin-left:auto;padding:3px 11px;border:1.5px solid var(--blue-lt);border-radius:99px;background:transparent;transition:.12s;font-family:'DM Sans',sans-serif}
-.week-toggle:hover{background:var(--blue-lt);color:#fff}
-.chart-scroll{overflow-x:auto;padding-bottom:14px}
-.chart-inner{display:inline-flex;flex-direction:column;align-items:center;min-width:100%;padding:0 16px}
-.hub-node{background:var(--navy);color:#fff;border:3px solid var(--gold);box-shadow:0 4px 20px rgba(0,0,0,.2);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.86rem;border-radius:999px;padding:10px 28px;white-space:nowrap}
-.ws-row{display:flex;gap:10px;align-items:flex-start;padding:4px;flex-wrap:wrap;justify-content:center}
+.live-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
+  animation: pulse 2s infinite;
+}
 
-/* ─── WS CARDS ─── */
-.ws-card{width:168px;border-radius:14px;border:2.5px solid;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 2px 8px rgba(0,0,0,.07);flex-shrink:0;display:flex;flex-direction:column}
-.ws-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.16)}
-.ws-card.inprog  {background:var(--inprog);  border-color:var(--inprog-bdr)}
-.ws-card.notstart{background:var(--notstart);border-color:var(--notstart-bdr)}
-.ws-card.blocked {background:var(--blocked); border-color:var(--blocked-bdr)}
-.ws-card.complete{background:var(--complete);border-color:var(--complete-bdr)}
-.ws-card-header{padding:8px 9px 5px;flex-shrink:0}
-.ws-card-name{font-weight:700;font-size:.75rem;line-height:1.25;display:flex;justify-content:space-between;align-items:flex-start;gap:4px;margin-bottom:4px}
-.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px}
-.dot-high{background:var(--red)}.dot-med{background:var(--amber)}.dot-low{background:var(--green)}
-.poc-row{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:2px}
-.poc-tag{font-size:.58rem;color:var(--muted);font-weight:500;background:rgba(255,255,255,.55);border-radius:5px;padding:1px 4px;white-space:nowrap}
-body.dark .poc-tag{background:rgba(255,255,255,.08)}
-.ws-card-phases{border-top:1.5px solid rgba(0,0,0,.08);padding:6px 8px 7px;display:flex;flex-direction:column;gap:4px;flex:1}
-body.dark .ws-card-phases{border-top-color:rgba(255,255,255,.08)}
-.phase-row{display:flex;align-items:center;gap:5px}
-.phase-label{font-size:.58rem;font-weight:700;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.phase-bar-wrap{width:28px;background:rgba(0,0,0,.1);border-radius:99px;height:3px;flex-shrink:0}
-.phase-bar{height:100%;border-radius:99px;transition:width .5s}
-.pb-pkg{background:#3b82f6}.pb-proc{background:#7c3aed}.pb-rev{background:#0d9488}
-.phase-val{font-family:'Space Grotesk',sans-serif;font-size:.7rem;font-weight:700;width:18px;text-align:right;flex-shrink:0}
-.ws-card-footer{background:rgba(0,0,0,.06);padding:5px 8px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;margin-top:auto}
-body.dark .ws-card-footer{background:rgba(0,0,0,.2)}
-.ws-card-footer span{font-size:.59rem;color:var(--muted);font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.95); }
+}
 
-/* ─── WEEKLY ACCORDION ─── */
-.weekly-accordion{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:8px;background:var(--card)}
-.weekly-acc-header{display:flex;align-items:center;padding:10px 16px;cursor:pointer;background:var(--card);transition:.12s;gap:10px;user-select:none}
-.weekly-acc-header:hover{background:var(--bg)}
-.weekly-acc-title{font-size:.84rem;font-weight:700;color:var(--text)}
-.weekly-acc-meta{font-size:.73rem;color:var(--muted);margin-left:auto;margin-right:8px}
-.weekly-acc-body{display:none;padding:12px 14px}
-.weekly-acc-body.open{display:block}
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
 
-/* ─── KANBAN ─── */
-.kanban-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-@media(max-width:1100px){.kanban-board{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:700px){.kanban-board{grid-template-columns:1fr}}
-.kanban-col{background:var(--bg);border-radius:12px;padding:12px;min-height:200px;border:1px solid var(--border)}
-.kanban-col-header{font-size:.8rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid}
-.kanban-col.k-notstart .kanban-col-header{color:var(--notstart-fg);border-color:var(--notstart-bdr)}
-.kanban-col.k-inprog   .kanban-col-header{color:var(--inprog-fg);  border-color:var(--inprog-bdr)}
-.kanban-col.k-blocked  .kanban-col-header{color:var(--blocked-fg); border-color:var(--blocked-bdr)}
-.kanban-col.k-complete .kanban-col-header{color:var(--complete-fg);border-color:var(--complete-bdr)}
-.kanban-count{background:rgba(0,0,0,.1);border-radius:99px;padding:1px 8px;font-size:.7rem}
-body.dark .kanban-count{background:rgba(255,255,255,.1)}
-.kanban-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:.14s;border-left:3px solid transparent}
-.kanban-card:hover{box-shadow:0 3px 14px rgba(0,0,0,.12);transform:translateX(2px)}
-.kanban-col.k-inprog  .kanban-card{border-left-color:var(--inprog-bdr)}
-.kanban-col.k-blocked .kanban-card{border-left-color:var(--blocked-bdr)}
-.kanban-col.k-complete .kanban-card{border-left-color:var(--complete-bdr)}
-.kanban-card-name{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3}
-.kanban-card-meta{font-size:.7rem;color:var(--muted)}
-.kanban-col.drag-over{background:rgba(37,99,235,.06);outline:2px dashed var(--blue-lt)}
+.nav-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 20px 8px;
+  margin-top: 8px;
+}
 
-/* ─── TABLE ─── */
-.section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.section-title{font-size:.95rem;font-weight:700;color:var(--text)}
-.action-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-.btn{padding:6px 14px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:.14s}
-.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--navy2)}
-.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:#e08e00}
-.btn-outline{background:var(--card);color:var(--text);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--blue-lt);color:var(--blue)}
-.col-toggle-wrap{position:relative;display:inline-block}
-.col-toggle-panel{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:500;min-width:210px;padding:10px;max-height:320px;overflow-y:auto}
-.col-toggle-panel.open{display:block}
-.col-toggle-item{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:.8rem;color:var(--text);transition:.1s}
-.col-toggle-item:hover{background:var(--bg)}
-.col-toggle-item input{cursor:pointer;width:14px;height:14px;accent-color:var(--blue)}
-.col-toggle-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:2px 6px 7px;border-bottom:1px solid var(--border);margin-bottom:4px}
-.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:14px}
-table.tracker{width:100%;border-collapse:collapse;background:var(--card);font-size:.79rem}
-table.tracker thead th{background:var(--navy2);color:#fff;font-weight:600;padding:9px 10px;text-align:center;white-space:nowrap;font-family:'Space Grotesk',sans-serif;font-size:.73rem;cursor:pointer;user-select:none}
-table.tracker thead th:hover{background:#1e3a6e}
-table.tracker thead th .th-inner{display:flex;align-items:center;justify-content:center;gap:5px}
-table.tracker tbody tr:nth-child(even){background:rgba(0,0,0,.015)}
-table.tracker tbody tr:hover{background:rgba(37,99,235,.04)}
-body.dark table.tracker tbody tr:hover{background:rgba(255,255,255,.04)}
-table.tracker td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;color:var(--text)}
-.status-pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:.67rem;font-weight:700;white-space:nowrap}
-.pill-inprog  {background:var(--inprog);  color:var(--inprog-fg)}
-.pill-notstart{background:var(--notstart);color:var(--notstart-fg)}
-.pill-blocked {background:var(--blocked); color:var(--blocked-fg)}
-.pill-complete{background:var(--complete);color:var(--complete-fg)}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 0 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  user-select: none;
+  border-left: 3px solid transparent;
+}
 
-/* ─── EMPTY STATE ─── */
-.empty-state{text-align:center;padding:32px;color:var(--muted);font-size:.85rem}
-.empty-state .es-icon{font-size:2rem;margin-bottom:10px}
+.nav-item:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
 
-/* ─── TOOLTIP ─── */
-.tooltip{position:fixed;background:var(--navy);color:#fff;border-radius:10px;padding:10px 14px;font-size:.77rem;pointer-events:none;opacity:0;transition:opacity .15s;z-index:9999;min-width:190px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
-.tooltip.visible{opacity:1}
-.tooltip .tt-title{font-weight:700;font-size:.88rem;margin-bottom:6px;color:var(--gold)}
+.nav-item.active {
+  background: var(--color-primary-dim);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+}
 
-/* ─── SCROLL STYLE ─── */
-.content::-webkit-scrollbar,.sidebar-nav::-webkit-scrollbar{width:5px}
-.content::-webkit-scrollbar-track,.sidebar-nav::-webkit-scrollbar-track{background:transparent}
-.content::-webkit-scrollbar-thumb,.sidebar-nav::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.nav-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
 
-/* ─── ANIMATIONS ─── */
-@keyframes slideInToast{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.ws-card{animation:cardIn .25s ease both}
-</style>
+.sidebar-footer {
+  padding: 12px 8px 12px 8px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 6px;
+}
+
+.sidebar-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.sidebar-btn:hover {
+  border-color: var(--border-focus);
+  color: var(--color-primary);
+  background: var(--bg-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════════════════ */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ─── TOPBAR ─── */
+.topbar {
+  height: 60px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
+  gap: 20px;
+}
+
+.topbar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.page-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.page-breadcrumb {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success);
+  padding: 4px 10px;
+  background: var(--color-success-dim);
+  border-radius: var(--radius-sm);
+}
+
+.sync-status.error {
+  color: var(--color-error);
+  background: var(--color-error-dim);
+}
+
+.sync-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(22, 163, 74, 0.2);
+  border-top-color: var(--color-success);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.sync-time {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  border-color: var(--border-focus);
+  background: var(--bg-secondary);
+  color: var(--color-primary);
+}
+
+/* ─── CONTENT AREA ─── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
+.content-inner {
+  padding: 28px;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DASHBOARD: SUMMARY & KPI SECTION
+═══════════════════════════════════════════════════════ */
+.summary-section {
+  margin-bottom: 32px;
+}
+
+.summary-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-text-icon {
+  font-size: 20px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.kpi-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--color-primary);
+}
+
+.kpi-card.success::before { background: var(--color-success); }
+.kpi-card.warning::before { background: var(--color-warning); }
+.kpi-card.error::before { background: var(--color-error); }
+
+.kpi-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.kpi-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   FILTERS & CONTROLS
+═══════════════════════════════════════════════════════ */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.filter-pill {
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.filter-pill.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.filter-pill.active.success { background: var(--color-success); border-color: var(--color-success); }
+.filter-pill.active.warning { background: var(--color-warning); border-color: var(--color-warning); }
+.filter-pill.active.error { background: var(--color-error); border-color: var(--color-error); }
+
+/* ═══════════════════════════════════════════════════════
+   PROJECT GRID / FLOWCHART
+═══════════════════════════════════════════════════════ */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.section-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.project-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.project-card-header {
+  margin-bottom: 16px;
+}
+
+.project-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.project-card-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.project-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.project-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-light);
+  font-size: 13px;
+}
+
+.project-card-label {
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.project-card-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary) 0%, #3b82f6 100%);
+  transition: width 0.5s ease;
+}
+
+/* ═══════════════════════════════════════════════════════
+   STATUS BADGES
+═══════════════════════════════════════════════════════ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.active {
+  background: var(--color-success-dim);
+  color: var(--color-success);
+}
+
+.status-badge.blocked {
+  background: var(--color-error-dim);
+  color: var(--color-error);
+}
+
+.status-badge.pending {
+  background: var(--color-warning-dim);
+  color: var(--color-warning);
+}
+
+.status-badge.complete {
+  background: var(--color-primary-dim);
+  color: var(--color-primary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   WEEKLY ACCORDION
+═══════════════════════════════════════════════════════ */
+.weekly-section {
+  margin-bottom: 32px;
+}
+
+.accordion-item {
+  margin-bottom: 12px;
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.accordion-header:hover {
+  border-color: var(--border-color);
+  background: var(--bg-tertiary);
+}
+
+.accordion-icon {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.accordion-header.open .accordion-icon {
+  transform: rotate(90deg);
+}
+
+.accordion-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+  padding: 0 4px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.accordion-header.open ~ .accordion-content {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   KANBAN BOARD
+═══════════════════════════════════════════════════════ */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.kanban-column {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+}
+
+.kanban-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.kanban-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.kanban-count {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kanban-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.kanban-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kanban-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.kanban-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.kanban-card-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DATA TABLE
+═══════════════════════════════════════════════════════ */
+.search-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 16px 10px 36px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--color-primary-dim);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 6px;
+  transition: color 0.2s ease;
+}
+
+.search-clear:hover {
+  color: var(--text-primary);
+}
+
+.table-wrap {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+table.data-table thead {
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+table.data-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+table.data-table th:hover {
+  background: var(--bg-tertiary);
+}
+
+table.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+table.data-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════ */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-tertiary);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.empty-state-desc {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+  gap: 16px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.modal-subtitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════ */
+.divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 20px 0;
+}
+
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-secondary {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-secondary:hover {
+  border-color: var(--border-focus);
+  background: var(--bg-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════ */
+.content::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar,
+.kanban-items::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track,
+.sidebar-nav::-webkit-scrollbar-track,
+.kanban-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb,
+.sidebar-nav::-webkit-scrollbar-thumb,
+.kanban-items::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb:hover,
+.sidebar-nav::-webkit-scrollbar-thumb:hover,
+.kanban-items::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+
+  .project-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .kanban-board {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .content-inner {
+    padding: 20px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .project-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+}
+  </style>
 </head>
 <body class="light">
-
-<!-- APP SHELL -->
-<div class="app">
-
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-logo">
-      <h1>EQ Project Tracker</h1>
-      <p><span class="live-dot"></span> GC + EQ Initiatives · Live</p>
-    </div>
-    <nav class="sidebar-nav" id="sidebarNav">
-      <div class="nav-section">Views</div>
-      <div class="nav-item active" id="nav-overview" onclick="APP.showView('overview',this)">
-        <span class="nav-icon">📊</span> Overview
-      </div>
-      <div class="nav-item" id="nav-kanban" onclick="APP.showView('kanban',this)">
-        <span class="nav-icon">🗂</span> Status Board
-      </div>
-      <div class="nav-item" id="nav-data" onclick="APP.showView('data',this)">
-        <span class="nav-icon">📋</span> Data Table
-      </div>
-      <div class="nav-section" style="margin-top:6px">Weekly Filter</div>
-      <div id="monthNav"></div>
-    </nav>
-    <div class="sidebar-bottom">
-      <button class="sidebar-bottom-btn" onclick="APP.toggleTheme()" id="themeBtn">🌙 Dark</button>
-      <button class="sidebar-bottom-btn" onclick="APP.manualRefresh()" style="color:#86efac">↺ Sync</button>
-    </div>
-  </div>
-
-  <!-- MAIN -->
-  <div class="main">
-    <div class="topbar">
-      <div>
-        <div class="topbar-title" id="topbarTitle">Overview</div>
-        <div class="topbar-breadcrumb">GC + EQ Initiatives</div>
-      </div>
-      <div class="topbar-right">
-        <span class="sync-badge" id="syncBadge">🔄 Loading…</span>
-        <span class="last-sync" id="lastSyncTime"></span>
-        <button class="refresh-btn" onclick="APP.manualRefresh()" title="Refresh now">↺ Refresh</button>
-        <button class="theme-toggle" onclick="APP.toggleTheme()" id="themeBtn2">🌙 Dark</button>
-      </div>
-    </div>
-
-    <!-- SCROLLABLE CONTENT -->
-    <div class="content">
-
-      <!-- ═══ OVERVIEW VIEW ═══ -->
-      <div class="view active" id="view-overview">
-        <div class="summary-banner">
-          <span class="sb-icon">📋</span>
-          <span class="sb-text" id="summaryText">Loading live data…</span>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon">⚡</div>
+          <h1>EQ Tracker</h1>
         </div>
-        <div class="stats" id="statsRow"></div>
+        <div class="sidebar-subtitle">
+          <span class="live-indicator"></span>
+          <span>Live Dashboard</span>
+        </div>
+      </div>
 
-        <!-- Filter pills for flowchart -->
-        <div class="filter-bar">
-          <span class="filter-label">Show:</span>
-          <button class="filter-pill active" data-filter="All"          onclick="APP.setFilter('All',this);APP.showView('overview',document.getElementById('nav-overview'))">All</button>
-          <button class="filter-pill fp-inprog"  data-filter="In Progress" onclick="APP.setFilter('In Progress',this);APP.showView('overview',document.getElementById('nav-overview'))">In Progress</button>
-          <button class="filter-pill fp-blocked" data-filter="Blocked"     onclick="APP.setFilter('Blocked',this);APP.showView('overview',document.getElementById('nav-overview'))">Blocked</button>
-          <button class="filter-pill fp-notstart" data-filter="Not Started" onclick="APP.setFilter('Not Started',this);APP.showView('overview',document.getElementById('nav-overview'))">Not Started</button>
-          <button class="filter-pill fp-complete" data-filter="Complete"   onclick="APP.setFilter('Complete',this);APP.showView('overview',document.getElementById('nav-overview'))">Complete</button>
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigation</div>
+        <div class="nav-item active" onclick="APP.showView('overview', this)">
+          <span class="nav-icon">📊</span> Dashboard
+        </div>
+        <div class="nav-item" onclick="APP.showView('kanban', this)">
+          <span class="nav-icon">🗂</span> Kanban Board
+        </div>
+        <div class="nav-item" onclick="APP.showView('data', this)">
+          <span class="nav-icon">📋</span> Data Table
         </div>
 
-        <div class="chart-section">
-          <div class="chart-section-title">
-            GC + EQ Project Flowchart
-            <span style="font-size:.68rem;color:var(--muted);font-weight:400;margin-left:4px">auto-refreshes every 30s</span>
+        <div class="nav-section-title" style="margin-top:16px">Filters</div>
+        <div id="weekNav"></div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="sidebar-btn" onclick="APP.toggleTheme()" id="themeBtn">🌙 Dark</button>
+        <button class="sidebar-btn" onclick="APP.manualRefresh()">↺ Refresh</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="page-breadcrumb">GC + EQ Initiatives</div>
+        </div>
+        <div class="topbar-right">
+          <div class="sync-status" id="syncStatus">✅ Live</div>
+          <div class="sync-time" id="syncTime"></div>
+          <button class="btn-icon" onclick="APP.manualRefresh()" title="Refresh">↺</button>
+          <button class="btn-icon" onclick="APP.toggleTheme()" title="Toggle dark mode">🌙</button>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="content">
+        <div class="content-inner">
+          <!-- OVERVIEW VIEW -->
+          <div class="view active" id="view-overview">
+            <!-- Summary -->
+            <div class="summary-section">
+              <div class="summary-text">
+                <span class="summary-text-icon">📊</span>
+                <span>Project execution dashboard — real-time sync from Google Sheets</span>
+              </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid" id="kpiGrid"></div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+              <span class="filter-label">Filter by status:</span>
+              <button class="filter-pill active" onclick="APP.setFilter('All', this)">All</button>
+              <button class="filter-pill success" onclick="APP.setFilter('In Progress', this)">In Progress</button>
+              <button class="filter-pill error" onclick="APP.setFilter('Blocked', this)">Blocked</button>
+              <button class="filter-pill warning" onclick="APP.setFilter('Not Started', this)">Not Started</button>
+              <button class="filter-pill" onclick="APP.setFilter('Complete', this)">Complete</button>
+            </div>
+
+            <!-- Projects Grid -->
+            <div>
+              <div class="section-header">
+                <h2 class="section-title">Active Projects</h2>
+                <span class="section-meta" id="projectCount"></span>
+              </div>
+              <div class="project-grid" id="projectGrid"></div>
+            </div>
+
+            <!-- Weekly Breakdown -->
+            <div class="weekly-section">
+              <div class="section-header">
+                <h2 class="section-title">By Week</h2>
+              </div>
+              <div id="weeklyBreakdown"></div>
+            </div>
           </div>
-          <div class="chart-scroll">
-            <div class="chart-inner">
-              <div class="hub-node">GC + EQ Initiatives</div>
-              <div style="height:20px"></div>
-              <div class="ws-row" id="wsRow"></div>
+
+          <!-- KANBAN VIEW -->
+          <div class="view" id="view-kanban">
+            <div class="filter-bar">
+              <span class="filter-label">Kanban Board —</span>
+              <span id="kanbanMonth" style="font-weight: 600; color: var(--text-primary);">All Projects</span>
+              <button class="filter-pill" style="margin-left: auto;" onclick="APP._weekFilter = null; APP._applyFilters(); RENDER.renderKanban(APP._filteredRows)">Clear filter</button>
+            </div>
+            <div class="kanban-board" id="kanbanBoard"></div>
+          </div>
+
+          <!-- DATA TABLE VIEW -->
+          <div class="view" id="view-data">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input class="search-input" type="text" id="searchInput" placeholder="Search projects, teams, initiatives…" oninput="APP.onSearch(this.value)"/>
+              <span class="search-clear" onclick="document.getElementById('searchInput').value = ''; APP.onSearch('')">✕</span>
+            </div>
+
+            <div class="filter-bar">
+              <span class="filter-label">Filter:</span>
+              <button class="filter-pill active" onclick="APP.setFilter('All', this)">All</button>
+              <button class="filter-pill success" onclick="APP.setFilter('In Progress', this)">In Progress</button>
+              <button class="filter-pill error" onclick="APP.setFilter('Blocked', this)">Blocked</button>
+              <button class="filter-pill warning" onclick="APP.setFilter('Not Started', this)">Not Started</button>
+              <button class="filter-pill" onclick="APP.setFilter('Complete', this)">Complete</button>
+            </div>
+
+            <div class="section-header">
+              <h2 class="section-title">All Projects</h2>
+              <span class="section-meta">Live from Google Sheets</span>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr id="headerRow"></tr></thead>
+                <tbody id="tableBody"></tbody>
+              </table>
             </div>
           </div>
         </div>
-
-        <div class="chart-section">
-          <div class="chart-section-title">
-            Projects by Week
-            <button class="week-toggle" id="weekAccToggle" onclick="RENDER.toggleAllWeeks()">Expand all weeks</button>
-          </div>
-          <div id="weeklyAccordions"></div>
-        </div>
       </div>
+    </div>
+  </div>
 
-      <!-- ═══ KANBAN VIEW ═══ -->
-      <div class="view" id="view-kanban">
-        <div class="filter-bar" style="margin-bottom:16px">
-          <span class="filter-label">Status Board —</span>
-          <span id="kanbanMonth" style="font-size:.82rem;font-weight:700;color:var(--text)">All Projects</span>
-          <button class="filter-pill" style="margin-left:auto" onclick="APP._weekFilter=null;APP._applyFilters();RENDER.renderKanban(APP._filteredRows)">Clear week filter</button>
-        </div>
-        <div class="kanban-board" id="kanbanBoard">
-          <div class="empty-state" style="grid-column:1/-1"><div class="es-icon">⏳</div>Loading…</div>
-        </div>
-      </div>
-
-      <!-- ═══ DATA TABLE VIEW ═══ -->
-      <div class="view" id="view-data">
-        <!-- Search -->
-        <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input class="search-input" type="text" id="searchInput"
-                 placeholder="Search projects, POCs, initiatives, status…"
-                 oninput="APP.onSearch(this.value)"/>
-          <span class="search-clear" onclick="document.getElementById('searchInput').value='';APP.onSearch('')">✕</span>
-        </div>
-
-        <!-- Filter pills -->
-        <div class="filter-bar">
-          <span class="filter-label">Filter:</span>
-          <button class="filter-pill active" data-filter="All"          onclick="APP.setFilter('All',this);APP.showView('data',document.getElementById('nav-data'))">All</button>
-          <button class="filter-pill fp-inprog"  data-filter="In Progress" onclick="APP.setFilter('In Progress',this);APP.showView('data',document.getElementById('nav-data'))">In Progress</button>
-          <button class="filter-pill fp-blocked" data-filter="Blocked"     onclick="APP.setFilter('Blocked',this);APP.showView('data',document.getElementById('nav-data'))">Blocked</button>
-          <button class="filter-pill fp-notstart" data-filter="Not Started" onclick="APP.setFilter('Not Started',this);APP.showView('data',document.getElementById('nav-data'))">Not Started</button>
-          <button class="filter-pill fp-complete" data-filter="Complete"   onclick="APP.setFilter('Complete',this);APP.showView('data',document.getElementById('nav-data'))">Complete</button>
-        </div>
-
-        <div class="section-header">
-          <span class="section-title">All Projects</span>
-          <span style="font-size:.72rem;color:var(--muted);margin-left:auto">📡 Live from Google Sheets · refreshes every 30s</span>
-        </div>
-
-        <div class="action-bar">
-          <div class="col-toggle-wrap">
-            <button class="btn btn-outline" onclick="RENDER.toggleColPanel()">☰ Columns</button>
-            <div class="col-toggle-panel" id="colTogglePanel"></div>
-          </div>
-          <button class="btn btn-outline" onclick="APP.manualRefresh()">↺ Refresh</button>
-          <button class="btn btn-outline" onclick="APP.exportCSV()">⬇ Export CSV</button>
-        </div>
-
-        <div class="table-wrap">
-          <table class="tracker">
-            <thead><tr id="headerRow"></tr></thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </div><!-- /content -->
-  </div><!-- /main -->
-</div><!-- /app -->
-
-<script src="config.js"></script>
-<script src="utils.js"></script>
-<script src="render.js"></script>
-<script src="api.js"></script>
-<script src="app.js"></script>
+  <!-- SCRIPTS -->
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script src="render.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
