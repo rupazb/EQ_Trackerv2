@@ -1,16 +1,29 @@
 // ═══════════════════════════════════════════════════════
 //  config.js — EQ Project Tracker Configuration
-//  ▸ Set SHEET_ID and SHEET_NAME before deploying
+//  ▸ Set SHEET_CSV_URL below — that's the only required edit
 // ═══════════════════════════════════════════════════════
 
 const CONFIG = {
 
   // ── GOOGLE SHEETS ──────────────────────────────────
-  // Replace with your Google Sheet ID (from the URL)
-  // URL format: https://docs.google.com/spreadsheets/d/SHEET_ID/edit
-  SHEET_ID: '2PACX-1vQj6UNpK8LqTGHXwuowg7hMqzwixKmeo9OyGhgj094DmEri17RHIbeq8sBELYqGRQ',
+  // Paste your Google Sheet's published CSV URL here.
+  //
+  // How to get it:
+  //   1. Open your Google Sheet
+  //   2. File → Share → Publish to web
+  //   3. Select your sheet tab (e.g. "Project Management")
+  //   4. Change format dropdown to "Comma-separated values (.csv)"
+  //   5. Click Publish → copy the full URL and paste below
+  //
+  // It will look like:
+  //   https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv
+  //
+  SHEET_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQj6UNpK8LqTGHXwuowg7hMqzwixKmeo9OyGhgj094DmEri17RHIbeq8sBELYqGRQ/pub?output=csv',
 
-  // The exact name of the sheet/tab (default: "Project Management")
+  // ── LEGACY: only needed if NOT using SHEET_CSV_URL ──
+  // If you prefer using the Opensheet proxy, leave SHEET_CSV_URL empty
+  // and fill in SHEET_ID + SHEET_NAME instead.
+  SHEET_ID:   '',
   SHEET_NAME: 'Project Management',
 
   // Auto-refresh interval in milliseconds (30 seconds)
