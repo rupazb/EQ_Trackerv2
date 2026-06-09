@@ -52,11 +52,23 @@ const UTILS = {
           projectName: r.projectName,
           initiative: r.initiative,
           portfolio: r.portfolio,
+          // project-level status will be computed from task statuses (see below)
           status: r.status,
           tasks: []
         });
       }
-      map.get(key).tasks.push(r);
+      const proj = map.get(key);
+      proj.tasks.push(r);
+
+      // Derive a project-level status based on task statuses with priority:
+      // Blocked > In Progress > Not Started > Complete
+      const priority = { 'Blocked': 4, 'In Progress': 3, 'Not Started': 2, 'Complete': 1 };
+      const current = proj.status || 'Not Started';
+      const better = (s) => priority[s] ? priority[s] : 0;
+      // If the incoming task status has higher priority, update project status
+      if (better(r.status) > better(current)) {
+        proj.status = r.status;
+      }
     });
     return Array.from(map.values());
   },
