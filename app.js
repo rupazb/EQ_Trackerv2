@@ -132,9 +132,21 @@ const APP = {
   },
 
   setFilter(status, el) {
-    this._filterStatus = status;
+    // Normalise: KPI cards now pass the status string directly.
+    // Guard against old "Total Projects" label accidentally being passed.
+    this._filterStatus = (status === 'Total Projects') ? 'All' : (status || 'All');
     document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-    if (el) el.classList.add('active');
+    if (el) {
+      el.classList.add('active');
+    } else {
+      // Highlight the matching pill when called from a KPI card click
+      document.querySelectorAll('.filter-pill').forEach(p => {
+        if (p.dataset.status === this._filterStatus ||
+            (this._filterStatus === 'All' && p.dataset.status === 'All')) {
+          p.classList.add('active');
+        }
+      });
+    }
     this._applyFilters();
     this.rerender();
   },
@@ -161,8 +173,8 @@ const APP = {
     document.querySelectorAll('.nav-week-item').forEach(i => i.classList.remove('active'));
     if (this._weekFilter && el) el.classList.add('active');
     this._applyFilters();
-    this.showView('kanban', null);
-    RENDER.renderKanban(this._filteredRows, this._weekFilter);
+    this.showView('Status', null);
+    RENDER.renderStatus(this._filteredRows, this._weekFilter);
   },
 
   // ── RENDER ──
@@ -176,8 +188,8 @@ const APP = {
     if (this._activeView === 'overview') {
       RENDER.renderFlowchart(this._rows, this._filterStatus);
       RENDER.renderWeeklyAccordions(this._filteredRows);
-    } else if (this._activeView === 'kanban') {
-      RENDER.renderKanban(this._filteredRows, this._weekFilter);
+    } else if (this._activeView === 'Status') {
+      RENDER.renderStatus(this._filteredRows, this._weekFilter);
     } else if (this._activeView === 'data') {
       RENDER.renderTable(this._filteredRows);
     }
@@ -194,7 +206,7 @@ const APP = {
 
     this._activeView = viewId;
 
-    const titles = { overview: 'Dashboard', kanban: 'Kanban Board', data: 'Project Data' };
+    const titles = { overview: 'Dashboard', Status: 'Status Board', data: 'Project Data' };
     document.getElementById('pageTitle').textContent = titles[viewId] || viewId;
 
     this.rerender();
