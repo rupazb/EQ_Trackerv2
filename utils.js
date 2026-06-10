@@ -41,35 +41,49 @@ const UTILS = {
   },
 
   // ── GROUPING ──
+  //
+  // FIX: Status is now computed AFTER all tasks are collected, not
+  // incrementally. This prevents the "first row wins" bug where a
+  // project initialized with status A would not be overridden by
+  // a later task even when the priority logic should have caught it.
+  //
+  // Priority order:  Blocked (4) > In Progress (3) > Not Started (2) > Complete (1)
+  // A project's displayed status = the highest-priority status across ALL its tasks.
+  //
   groupByProject(rows) {
+    const STATUS_PRIORITY = { 'Blocked': 4, 'In Progress': 3, 'Not Started': 2, 'Complete': 1 };
     const map = new Map();
+
+    // Pass 1: collect all tasks into each project bucket
     rows.forEach(r => {
       const key = r.projectName || r.projectId || 'Unknown';
       if (!map.has(key)) {
-        const first = rows.find(x => x.projectName === key || x.projectId === key);
         map.set(key, {
-          projectId: r.projectId,
+          projectId:   r.projectId,
           projectName: r.projectName,
-          initiative: r.initiative,
-          portfolio: r.portfolio,
-          // project-level status will be computed from task statuses (see below)
-          status: r.status,
-          tasks: []
+          initiative:  r.initiative,
+          portfolio:   r.portfolio,
+          status:      null,   // resolved in pass 2
+          tasks:       [],
         });
       }
-      const proj = map.get(key);
-      proj.tasks.push(r);
-
-      // Derive a project-level status based on task statuses with priority:
-      // Blocked > In Progress > Not Started > Complete
-      const priority = { 'Blocked': 4, 'In Progress': 3, 'Not Started': 2, 'Complete': 1 };
-      const current = proj.status || 'Not Started';
-      const better = (s) => priority[s] ? priority[s] : 0;
-      // If the incoming task status has higher priority, update project status
-      if (better(r.status) > better(current)) {
-        proj.status = r.status;
-      }
+      map.get(key).tasks.push(r);
     });
+
+    // Pass 2: derive each project's status from its complete task list
+    map.forEach(proj => {
+      let best = 'Complete';         // lowest priority — will be overridden
+      let bestScore = 0;
+      proj.tasks.forEach(t => {
+        const score = STATUS_PRIORITY[t.status] || 0;
+        if (score > bestScore) {
+          bestScore = score;
+          best      = t.status;
+        }
+      });
+      proj.status = best || 'Not Started';
+    });
+
     return Array.from(map.values());
   },
 
