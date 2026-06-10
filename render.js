@@ -46,31 +46,44 @@ const RENDER = {
   },
 
   // ── KPI RENDERING ──
+  //
+  // FIX: renderStats now calls groupByProject on the FULL unfiltered rows
+  // (APP._rows) rather than whatever filtered subset was passed in.
+  // This ensures the summary bar counts always match the card grid,
+  // which also derives status through groupByProject.
+  //
+  // The onclick filter handlers now use the STATUS string directly
+  // (not the KPI label like "Total Projects") so APP.setFilter works correctly.
+  //
   renderStats(rows) {
-    const projects = UTILS.groupByProject(rows);
-    const total = projects.length;
-    const byStatus = { 'In Progress': 0, 'Blocked': 0, 'Not Started': 0, 'Complete': 0 };
+    // Always count against the complete unfiltered dataset
+    const allRows     = (APP && APP._rows && APP._rows.length) ? APP._rows : rows;
+    const projects    = UTILS.groupByProject(allRows);
+    const total       = projects.length;
+    const byStatus    = { 'In Progress': 0, 'Blocked': 0, 'Not Started': 0, 'Complete': 0 };
     projects.forEach(p => {
       if (byStatus[p.status] !== undefined) byStatus[p.status]++;
     });
 
     const kpiData = [
-      { label: 'Total Projects', value: total, type: 'info' },
-      { label: 'In Progress', value: byStatus['In Progress'], type: 'success' },
-      { label: 'Blocked', value: byStatus['Blocked'], type: 'error' },
-      { label: 'Not Started', value: byStatus['Not Started'], type: 'warning' },
-      { label: 'Complete', value: byStatus['Complete'], type: 'info' },
+      { label: 'Total Projects', value: total,                    type: 'info',    filter: 'All'          },
+      { label: 'In Progress',    value: byStatus['In Progress'],  type: 'success', filter: 'In Progress'  },
+      { label: 'Blocked',        value: byStatus['Blocked'],      type: 'error',   filter: 'Blocked'      },
+      { label: 'Not Started',    value: byStatus['Not Started'],  type: 'warning', filter: 'Not Started'  },
+      { label: 'Complete',       value: byStatus['Complete'],     type: 'info',    filter: 'Complete'     },
     ];
 
-    document.getElementById('kpiGrid').innerHTML = kpiData.map((kpi, idx) => `
-      <div class="kpi-card ${kpi.type}" onclick="APP.setFilter('${kpi.label}', document.querySelectorAll('.filter-pill')[${idx}])" style="cursor:pointer">
+    document.getElementById('kpiGrid').innerHTML = kpiData.map(kpi => `
+      <div class="kpi-card ${kpi.type}"
+           onclick="APP.setFilter('${kpi.filter}', null)"
+           style="cursor:pointer">
         <div class="kpi-label">${kpi.label}</div>
         <div class="kpi-value">${kpi.value}</div>
         <div class="kpi-meta">projects</div>
       </div>
     `).join('');
 
-    document.getElementById('projectCount').textContent = `${projects.length} total`;
+    document.getElementById('projectCount').textContent = `${total} total`;
   },
 
   // ── PROJECT CARDS ──
